@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 /** Header mobile dengan tombol kembali untuk sub-halaman lapangan/gudang. */
-export function MobileHeader({ title, back = '/lapangan', color = '#1e3a8a' }: { title: string; back?: string; color?: string }) {
+export function MobileHeader({ title, back = '/sales', color = '#1e3a8a' }: { title: string; back?: string; color?: string }) {
   const nav = useNavigate();
   return (
     <header style={{ background: color, color: '#fff', padding: '14px 12px', paddingTop: 'calc(14px + env(safe-area-inset-top))', display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', top: 0, zIndex: 20 }}>

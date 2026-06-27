@@ -95,11 +95,11 @@ export default function App() {
     <Routes>
       {/* Katalog publik — tanpa login (nanti dilayani di katalog.brontolano.com) */}
       <Route path="/katalog" element={<Katalog />} />
-      {/* PWA Staff Lapangan (mobile) */}
-      <Route path="/lapangan" element={<MobileProtected roles={lap}><LapanganHome /></MobileProtected>} />
-      <Route path="/lapangan/pengiriman" element={<MobileProtected roles={lap}><LapanganPengiriman /></MobileProtected>} />
-      <Route path="/lapangan/konsumen" element={<MobileProtected roles={lap}><LapanganKonsumen /></MobileProtected>} />
-      <Route path="/lapangan/pos" element={<MobileProtected roles={lap}><LapanganPos /></MobileProtected>} />
+      {/* PWA Staff Lapangan (mobile) — path /sales */}
+      <Route path="/sales" element={<MobileProtected roles={lap}><LapanganHome /></MobileProtected>} />
+      <Route path="/sales/pengiriman" element={<MobileProtected roles={lap}><LapanganPengiriman /></MobileProtected>} />
+      <Route path="/sales/konsumen" element={<MobileProtected roles={lap}><LapanganKonsumen /></MobileProtected>} />
+      <Route path="/sales/pos" element={<MobileProtected roles={lap}><LapanganPos /></MobileProtected>} />
       {/* PWA Staff Gudang (mobile) */}
       <Route path="/gudang" element={<MobileProtected roles={gud}><GudangHome /></MobileProtected>} />
       <Route path="/gudang/masuk" element={<MobileProtected roles={gud}><GudangMasuk /></MobileProtected>} />

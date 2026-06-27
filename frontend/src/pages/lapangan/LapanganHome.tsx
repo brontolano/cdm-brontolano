@@ -2,9 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/auth';
 
 const MENU = [
-  { path: '/lapangan/pengiriman', icon: '🚚', label: 'Rute Kirim', desc: 'Tugas pengiriman & cetak' },
-  { path: '/lapangan/konsumen', icon: '🏪', label: 'Tambah Konsumen', desc: 'Foto toko & KTP + GPS' },
-  { path: '/lapangan/pos', icon: '🧾', label: 'POS / Order', desc: 'Buat order + cetak struk' },
+  { path: '/sales/pengiriman', icon: '🚚', label: 'Rute Kirim', desc: 'Tugas pengiriman & cetak' },
+  { path: '/sales/konsumen', icon: '🏪', label: 'Tambah Konsumen', desc: 'Foto toko & KTP + GPS' },
+  { path: '/sales/pos', icon: '🧾', label: 'POS / Order', desc: 'Buat order + cetak struk' },
 ];
 
 export default function LapanganHome() {

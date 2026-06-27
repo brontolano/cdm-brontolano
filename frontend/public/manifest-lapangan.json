@@ -2,7 +2,7 @@
   "name": "Brontolano Lapangan",
   "short_name": "Bronto Lapangan",
   "description": "Aplikasi staff lapangan PT Rojo Brontolano",
-  "start_url": "/lapangan",
+  "start_url": "/sales",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
