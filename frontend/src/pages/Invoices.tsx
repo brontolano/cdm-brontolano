@@ -3,6 +3,7 @@ import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState, rupiah } from '../components/ui';
+import { printThermalReceipt } from '../utils/receipt';
 
 export default function Invoices() {
   const { user } = useAuth();
@@ -77,7 +78,16 @@ export default function Invoices() {
           </div>
 
           <div className="no-print" style={{ marginTop: 12 }}>
-            <button className="btn secondary" onClick={() => window.print()}>🖨️ Print</button>
+            <button className="btn secondary" onClick={() => window.print()}>🖨️ Print A4</button>
+            <button className="btn secondary" style={{ marginLeft: 8 }} onClick={() => printThermalReceipt({
+              nomor: detail.nomor_invoice,
+              tanggal: new Date(detail.tanggal_invoice).toLocaleDateString('id-ID'),
+              kepada: detail.nama_toko,
+              items: (detail.items || []).map((it: any) => ({ nama: it.nama_barang, jumlah: it.jumlah, harga: Number(it.harga_satuan), subtotal: Number(it.subtotal) })),
+              total: Number(detail.total),
+              dibayar: Number(detail.jumlah_dibayar),
+              statusBayar: detail.status_pembayaran,
+            })}>🧾 Struk Thermal</button>
             {isAdmin && detail.status_pembayaran !== 'lunas' && (
               <span style={{ marginLeft: 12, display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                 <input type="number" value={bayar} onChange={(e) => setBayar(Number(e.target.value))} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', width: 140 }} />

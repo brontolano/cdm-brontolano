@@ -4,6 +4,7 @@ import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState, rupiah } from '../components/ui';
 import { priceForQty, tierInfo } from '../utils/pricing';
+import { printThermalReceipt } from '../utils/receipt';
 
 export default function Orders() {
   const { user } = useAuth();
@@ -148,6 +149,16 @@ export default function Orders() {
             </tbody>
           </table>
           <p className="right"><b>Total: {rupiah(detail.total_harga)}</b></p>
+          <div style={{ marginBottom: 10 }}>
+            <button className="btn secondary small" onClick={() => printThermalReceipt({
+              nomor: detail.nomor_order,
+              tanggal: new Date(detail.tanggal_order).toLocaleDateString('id-ID'),
+              kepada: detail.nama_toko,
+              catatan: detail.catatan,
+              items: (detail.items || []).map((it: any) => ({ nama: it.nama_barang, jumlah: it.jumlah, harga: Number(it.harga_satuan), subtotal: Number(it.subtotal) })),
+              total: Number(detail.total_harga),
+            })}>🧾 Cetak Struk Thermal</button>
+          </div>
           {isAdmin && detail.status === 'draft' && (
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button className="btn danger" onClick={() => cancelOrder(detail.id)}>Batalkan</button>
