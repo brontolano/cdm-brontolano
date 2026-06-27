@@ -73,6 +73,18 @@ services:
     ports:
       - "${LAPANGAN_PORT:-8091}:80"
 
+  # PWA Staff Gudang — image sama, root diarahkan ke /gudang (port terpisah).
+  gudang:
+    build: ./frontend
+    container_name: cdm-gudang
+    restart: unless-stopped
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/nginx-gudang.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${GUDANG_PORT:-8092}:80"
+
   # Backup otomatis harian (pg_dump terjadwal ke ./backups). Hapus service ini bila tak perlu.
   backup:
     image: postgres:17-alpine

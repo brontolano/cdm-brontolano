@@ -16,6 +16,9 @@ import LapanganHome from './pages/lapangan/LapanganHome';
 import LapanganPengiriman from './pages/lapangan/LapanganPengiriman';
 import LapanganKonsumen from './pages/lapangan/LapanganKonsumen';
 import LapanganPos from './pages/lapangan/LapanganPos';
+import GudangHome from './pages/gudang/GudangHome';
+import GudangMasuk from './pages/gudang/GudangMasuk';
+import GudangKeluar from './pages/gudang/GudangKeluar';
 
 interface MenuItem {
   path: string;
@@ -87,6 +90,7 @@ export default function App() {
   const { user, loading } = useAuth();
   if (loading) return <Spinner />;
   const lap: Role[] = ['lapangan', 'admin'];
+  const gud: Role[] = ['gudang', 'admin'];
   return (
     <Routes>
       {/* Katalog publik — tanpa login (nanti dilayani di katalog.brontolano.com) */}
@@ -96,6 +100,10 @@ export default function App() {
       <Route path="/lapangan/pengiriman" element={<MobileProtected roles={lap}><LapanganPengiriman /></MobileProtected>} />
       <Route path="/lapangan/konsumen" element={<MobileProtected roles={lap}><LapanganKonsumen /></MobileProtected>} />
       <Route path="/lapangan/pos" element={<MobileProtected roles={lap}><LapanganPos /></MobileProtected>} />
+      {/* PWA Staff Gudang (mobile) */}
+      <Route path="/gudang" element={<MobileProtected roles={gud}><GudangHome /></MobileProtected>} />
+      <Route path="/gudang/masuk" element={<MobileProtected roles={gud}><GudangMasuk /></MobileProtected>} />
+      <Route path="/gudang/keluar" element={<MobileProtected roles={gud}><GudangKeluar /></MobileProtected>} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/konsumen" element={<Protected><Konsumen /></Protected>} />
