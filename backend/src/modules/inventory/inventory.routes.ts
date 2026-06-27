@@ -231,6 +231,34 @@ router.post(
   })
 );
 
+// POST /inventory/:id/keluar — barang keluar manual (gudang & admin)
+router.post(
+  '/:id/keluar',
+  rbac('gudang', 'admin'),
+  asyncHandler(async (req, res) => {
+    const { jumlah, keterangan } = z
+      .object({ jumlah: z.number().int().positive(), keterangan: z.string().min(1) })
+      .parse(req.body);
+    const result = await withTransaction(async (client) => {
+      const cur = await client.query('SELECT stok_saat_ini, nama_barang FROM barang WHERE id=$1 FOR UPDATE', [req.params.id]);
+      if (!cur.rowCount) throw errors.notFound('Barang tidak ditemukan');
+      if (jumlah > cur.rows[0].stok_saat_ini) {
+        throw errors.unprocessable(`Stok tidak cukup untuk ${cur.rows[0].nama_barang} (tersedia ${cur.rows[0].stok_saat_ini})`);
+      }
+      const upd = await client.query(
+        'UPDATE barang SET stok_saat_ini = stok_saat_ini - $1, updated_at=now() WHERE id=$2 RETURNING *',
+        [jumlah, req.params.id]
+      );
+      await client.query(
+        `INSERT INTO stok_history (barang_id, tipe, jumlah, keterangan, created_by) VALUES ($1,'keluar',$2,$3,$4)`,
+        [req.params.id, jumlah, `Keluar manual: ${keterangan}`, req.user!.id]
+      );
+      return upd.rows[0];
+    });
+    ok(res, result);
+  })
+);
+
 // POST /inventory/:id/opname — penyesuaian stok manual (gudang & admin)
 router.post(
   '/:id/opname',
