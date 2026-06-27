@@ -46,6 +46,7 @@ export default function Inventory() {
   const [editId, setEditId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [masuk, setMasuk] = useState<{ barang: Barang; jumlah: number; keterangan: string } | null>(null);
+  const [opname, setOpname] = useState<{ barang: Barang; stok_baru: number; keterangan: string } | null>(null);
   const [history, setHistory] = useState<{ barang: Barang; rows: any[] } | null>(null);
 
   async function load() {
@@ -149,6 +150,16 @@ export default function Inventory() {
     } catch (err) { notify('error', apiError(err)); }
   }
 
+  async function submitOpname(e: React.FormEvent) {
+    e.preventDefault();
+    if (!opname) return;
+    try {
+      await api.post(`/inventory/${opname.barang.id}/opname`, { stok_baru: Number(opname.stok_baru), keterangan: opname.keterangan });
+      notify('success', `Stok ${opname.barang.nama_barang} disesuaikan jadi ${opname.stok_baru}`);
+      setOpname(null); load();
+    } catch (err) { notify('error', apiError(err)); }
+  }
+
   async function submitMasuk(e: React.FormEvent) {
     e.preventDefault();
     if (!masuk) return;
@@ -211,6 +222,7 @@ export default function Inventory() {
                   <td className="right">
                     <button className="btn secondary small" onClick={() => openHistory(b)}>History</button>
                     {canMasuk && <button className="btn small" style={{ marginLeft: 6 }} onClick={() => setMasuk({ barang: b, jumlah: 0, keterangan: '' })}>+ Masuk</button>}
+                    {canMasuk && <button className="btn secondary small" style={{ marginLeft: 6 }} onClick={() => setOpname({ barang: b, stok_baru: b.stok_saat_ini, keterangan: '' })}>Opname</button>}
                     {isAdmin && <button className="btn secondary small" style={{ marginLeft: 6 }} onClick={() => { setForm({ ...b, hpp: Number(b.hpp), harga_jual: Number(b.harga_jual) }); setEditId(b.id); setShowForm(true); }}>Edit</button>}
                     {isAdmin && <button className="btn danger small" style={{ marginLeft: 6 }} onClick={() => removeBarang(b)}>Hapus</button>}
                   </td>
@@ -302,6 +314,21 @@ export default function Inventory() {
         </Modal>
       )}
 
+      {opname && (
+        <Modal title={`Stok Opname — ${opname.barang.nama_barang}`} onClose={() => setOpname(null)}>
+          <form onSubmit={submitOpname}>
+            <p className="muted">Stok sistem saat ini: <b>{opname.barang.stok_saat_ini}</b> {opname.barang.unit}</p>
+            <div className="field"><label>Stok Fisik / Baru</label><input type="number" min={0} value={opname.stok_baru} onChange={(e) => setOpname({ ...opname, stok_baru: Number(e.target.value) })} required /></div>
+            <div className="field"><label>Alasan / Keterangan</label><input value={opname.keterangan} onChange={(e) => setOpname({ ...opname, keterangan: e.target.value })} placeholder="mis. selisih hitung fisik, rusak, hilang" required /></div>
+            <p className="muted" style={{ fontSize: 13 }}>Selisih: <b>{Number(opname.stok_baru) - opname.barang.stok_saat_ini >= 0 ? '+' : ''}{Number(opname.stok_baru) - opname.barang.stok_saat_ini}</b> (dicatat di riwayat sebagai penyesuaian)</p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn secondary" onClick={() => setOpname(null)}>Batal</button>
+              <button className="btn">Simpan Opname</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
       {history && (
         <Modal title={`Riwayat Stok — ${history.barang.nama_barang}`} onClose={() => setHistory(null)}>
           {history.rows.length === 0 ? <EmptyState message="Belum ada riwayat." /> : (
@@ -311,7 +338,7 @@ export default function Inventory() {
                 {history.rows.map((h) => (
                   <tr key={h.id}>
                     <td>{new Date(h.created_at).toLocaleString('id-ID')}</td>
-                    <td>{h.tipe === 'masuk' ? '⬆️ masuk' : '⬇️ keluar'}</td>
+                    <td>{h.tipe === 'masuk' ? '⬆️ masuk' : h.tipe === 'keluar' ? '⬇️ keluar' : '⚖️ opname'}</td>
                     <td>{h.jumlah}</td>
                     <td>{h.keterangan}</td>
                   </tr>

@@ -225,6 +225,33 @@ router.post(
   })
 );
 
+// POST /inventory/:id/opname — penyesuaian stok manual (gudang & admin)
+router.post(
+  '/:id/opname',
+  rbac('gudang', 'admin'),
+  asyncHandler(async (req, res) => {
+    const { stok_baru, keterangan } = z
+      .object({ stok_baru: z.number().int().nonnegative(), keterangan: z.string().min(1) })
+      .parse(req.body);
+    const result = await withTransaction(async (client) => {
+      const cur = await client.query('SELECT stok_saat_ini FROM barang WHERE id=$1 FOR UPDATE', [req.params.id]);
+      if (!cur.rowCount) throw errors.notFound('Barang tidak ditemukan');
+      const delta = stok_baru - cur.rows[0].stok_saat_ini;
+      const upd = await client.query(
+        'UPDATE barang SET stok_saat_ini=$1, updated_at=now() WHERE id=$2 RETURNING *',
+        [stok_baru, req.params.id]
+      );
+      await client.query(
+        `INSERT INTO stok_history (barang_id, tipe, jumlah, keterangan, created_by)
+         VALUES ($1,'penyesuaian',$2,$3,$4)`,
+        [req.params.id, delta, `Opname: ${keterangan} (${delta >= 0 ? '+' : ''}${delta})`, req.user!.id]
+      );
+      return upd.rows[0];
+    });
+    ok(res, result);
+  })
+);
+
 // GET /inventory/:id/history — stok history
 router.get(
   '/:id/history',
