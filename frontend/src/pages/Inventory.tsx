@@ -56,12 +56,30 @@ export default function Inventory() {
   useEffect(() => { load(); }, []);
 
   const [importing, setImporting] = useState(false);
-  async function importSheet() {
-    if (!confirm('Impor / sinkron produk dari Google Sheet Brontolano?')) return;
+
+  function saveBlob(data: BlobPart, filename: string) {
+    const url = URL.createObjectURL(new Blob([data], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+  async function downloadTemplate() {
+    try { const r = await api.get('/inventory/template-csv', { responseType: 'blob' }); saveBlob(r.data, 'template-produk.csv'); }
+    catch (err) { notify('error', apiError(err)); }
+  }
+  async function exportCsv() {
+    try { const r = await api.get('/inventory/export-csv', { responseType: 'blob' }); saveBlob(r.data, 'produk-cdm.csv'); }
+    catch (err) { notify('error', apiError(err)); }
+  }
+  async function importCsv(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // reset agar bisa pilih file sama lagi
+    if (!file) return;
     setImporting(true);
     try {
-      const r = await api.post('/inventory/import-sheet', {});
-      notify('success', `Impor selesai: ${r.data.data.imported} produk, ${r.data.data.skipped} dilewati`);
+      const csv = await file.text();
+      const r = await api.post('/inventory/import-csv', { csv });
+      notify('success', `Import selesai: ${r.data.data.imported} produk, ${r.data.data.skipped} dilewati`);
       load();
     } catch (err) { notify('error', apiError(err)); }
     finally { setImporting(false); }
@@ -130,8 +148,15 @@ export default function Inventory() {
     <div>
       <div className="toolbar">
         <h2>Inventory</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {isAdmin && <button className="btn secondary" onClick={importSheet} disabled={importing}>{importing ? 'Mengimpor…' : '⬇️ Impor Google Sheet'}</button>}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="btn secondary" onClick={downloadTemplate}>📄 Template</button>
+          <button className="btn secondary" onClick={exportCsv}>⬆️ Export CSV</button>
+          {isAdmin && (
+            <label className="btn secondary" style={{ cursor: 'pointer', margin: 0 }}>
+              {importing ? 'Mengimpor…' : '⬇️ Import CSV'}
+              <input type="file" accept=".csv,text/csv" onChange={importCsv} disabled={importing} style={{ display: 'none' }} />
+            </label>
+          )}
           {isAdmin && <button className="btn" onClick={() => { setForm(empty); setEditId(null); setShowForm(true); }}>+ Barang</button>}
         </div>
       </div>

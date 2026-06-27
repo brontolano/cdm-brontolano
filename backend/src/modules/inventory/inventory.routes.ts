@@ -8,8 +8,20 @@ import { parseRupiah } from '../../utils/pricing';
 const router = Router();
 router.use(authenticate);
 
-const DEFAULT_SHEET_CSV =
-  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ51Ksal92REpUDTH96kcFcN2cwgJXHlFRFu8z0cBbiuHoOHZLkb9uE_RgplxVPtCdIQoUD0on5Z7om/pub?output=csv';
+// Kolom CSV standar untuk import / export / template.
+const CSV_HEADERS = [
+  'URL Image', 'SKU', 'Kategori', 'Nama Barang', 'Ukuran', 'Type', 'Karton', 'Pcs', 'Stock',
+  'HET 1-5', 'S1 6-9', 'S2 10-24', 'S3 25-150', 'S4 >150',
+];
+
+/** Escape satu nilai untuk baris CSV. */
+function csvCell(v: unknown): string {
+  const s = v === null || v === undefined ? '' : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function toCsv(rows: (string | number | null)[][]): string {
+  return rows.map((r) => r.map(csvCell).join(',')).join('\r\n');
+}
 
 /** Parser CSV minimal yang menghormati tanda kutip. */
 function parseCsv(text: string): string[][] {
@@ -75,6 +87,39 @@ router.get(
       params
     );
     ok(res, rows.rows, { page, limit, total: Number(total.rows[0].count) });
+  })
+);
+
+// GET /inventory/export-csv — unduh semua produk sebagai CSV (sebelum /:id)
+router.get(
+  '/export-csv',
+  asyncHandler(async (_req, res) => {
+    const r = await query('SELECT * FROM barang ORDER BY kategori, nama_barang');
+    const body: (string | number | null)[][] = [CSV_HEADERS];
+    for (const b of r.rows) {
+      const img = typeof b.gambar === 'string' && b.gambar.startsWith('http') ? b.gambar : '';
+      body.push([
+        img, b.sku, b.kategori, b.nama_barang, b.ukuran, b.type_kemasan, b.isi_karton, b.isi_pcs,
+        b.stok_saat_ini, b.harga_het, b.harga_s1, b.harga_s2, b.harga_s3, b.harga_s4,
+      ]);
+    }
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="produk-cdm.csv"');
+    res.send('﻿' + toCsv(body)); // BOM agar Excel baca UTF-8
+  })
+);
+
+// GET /inventory/template-csv — unduh template CSV kosong + 1 contoh (sebelum /:id)
+router.get(
+  '/template-csv',
+  asyncHandler(async (_req, res) => {
+    const example = [
+      'https://contoh.com/gambar.jpg', 'MKG-0001', 'Minyak Goreng', 'Contoh Minyak 1L', 'Karton', 'Pouch',
+      '12', '12', '100', '244757', '242361', '239940', '237495', '235000',
+    ];
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="template-produk.csv"');
+    res.send('﻿' + toCsv([CSV_HEADERS, example]));
   })
 );
 
@@ -193,77 +238,70 @@ router.get(
   })
 );
 
-// POST /inventory/import-sheet — impor produk dari Google Sheet Brontolano (admin)
+/** Upsert baris CSV (format kolom CSV_HEADERS) ke tabel barang. */
+async function importRows(rows: string[][]) {
+  let imported = 0;
+  let skipped = 0;
+  await withTransaction(async (client) => {
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const nama = (r[3] || '').trim();
+      if (!nama) { skipped++; continue; }
+      const sku = (r[1] || '').trim() || null;
+      const data = {
+        gambar: (r[0] || '').trim() || null,
+        kategori: (r[2] || '').trim() || null,
+        ukuran: (r[4] || '').trim() || null,
+        type_kemasan: (r[5] || '').trim() || null,
+        isi_karton: parseInt(r[6]) || null,
+        isi_pcs: parseInt(r[7]) || null,
+        stok: parseInt(r[8]) || 0,
+        het: parseRupiah(r[9]),
+        s1: parseRupiah(r[10]),
+        s2: parseRupiah(r[11]),
+        s3: parseRupiah(r[12]),
+        s4: parseRupiah(r[13]),
+      };
+      const hargaJual = data.het ?? data.s1 ?? data.s2 ?? 0;
+      // Upsert: berdasar SKU jika ada, jika tidak berdasar nama_barang.
+      const existing = await client.query(
+        sku ? 'SELECT id FROM barang WHERE sku=$1' : 'SELECT id FROM barang WHERE nama_barang=$1',
+        [sku || nama]
+      );
+      if (existing.rowCount) {
+        await client.query(
+          `UPDATE barang SET nama_barang=$2, kategori=$3, gambar=$4, ukuran=$5, type_kemasan=$6,
+             isi_karton=$7, isi_pcs=$8, stok_saat_ini=$9, harga_het=$10, harga_s1=$11, harga_s2=$12,
+             harga_s3=$13, harga_s4=$14, harga_jual=$15, sku=COALESCE($16,sku), updated_at=now() WHERE id=$1`,
+          [existing.rows[0].id, nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan,
+           data.isi_karton, data.isi_pcs, data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, sku]
+        );
+      } else {
+        await client.query(
+          `INSERT INTO barang (nama_barang, kategori, gambar, ukuran, type_kemasan, isi_karton, isi_pcs,
+             stok_saat_ini, harga_het, harga_s1, harga_s2, harga_s3, harga_s4, harga_jual, hpp, unit, sku)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,0,COALESCE($15,'pcs'),$16)`,
+          [nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan, data.isi_karton, data.isi_pcs,
+           data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, data.ukuran, sku]
+        );
+      }
+      imported++;
+    }
+  });
+  return { imported, skipped };
+}
+
+// POST /inventory/import-csv — impor/sinkron produk dari file CSV (admin)
 router.post(
-  '/import-sheet',
+  '/import-csv',
   rbac('admin'),
   asyncHandler(async (req, res) => {
-    const url = (req.body?.url as string) || DEFAULT_SHEET_CSV;
-    let csv: string;
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      csv = await resp.text();
-    } catch (e: any) {
-      throw errors.badRequest(`Gagal mengambil Google Sheet: ${e.message}. Pastikan sheet di-publish ke web (CSV).`);
-    }
-    if (csv.trim().startsWith('<')) throw errors.badRequest('Sheet belum di-publish publik (mendapat HTML, bukan CSV).');
-
+    const csv = String(req.body?.csv || '');
+    if (!csv.trim()) throw errors.badRequest('File CSV kosong.');
+    if (csv.trim().startsWith('<')) throw errors.badRequest('File bukan CSV yang valid.');
     const rows = parseCsv(csv);
-    if (rows.length < 2) throw errors.badRequest('Sheet kosong / format tidak sesuai.');
-
-    // header: URL Image, SKU, Kategori, Nama Barang, Ukuran, Type, Karton, Pcs, Stock, HET, S1, S2, S3, S4
-    let imported = 0;
-    let skipped = 0;
-    const result = await withTransaction(async (client) => {
-      for (let i = 1; i < rows.length; i++) {
-        const r = rows[i];
-        const nama = (r[3] || '').trim();
-        if (!nama) { skipped++; continue; }
-        const sku = (r[1] || '').trim() || null;
-        const data = {
-          gambar: (r[0] || '').trim() || null,
-          sku,
-          kategori: (r[2] || '').trim() || null,
-          nama_barang: nama,
-          ukuran: (r[4] || '').trim() || null,
-          type_kemasan: (r[5] || '').trim() || null,
-          isi_karton: parseInt(r[6]) || null,
-          isi_pcs: parseInt(r[7]) || null,
-          stok: parseInt(r[8]) || 0,
-          het: parseRupiah(r[9]),
-          s1: parseRupiah(r[10]),
-          s2: parseRupiah(r[11]),
-          s3: parseRupiah(r[12]),
-          s4: parseRupiah(r[13]),
-        };
-        const hargaJual = data.het ?? data.s1 ?? data.s2 ?? 0;
-        // Upsert: berdasar SKU jika ada, jika tidak berdasar nama_barang.
-        const existing = await client.query(
-          sku ? 'SELECT id FROM barang WHERE sku=$1' : 'SELECT id FROM barang WHERE nama_barang=$1',
-          [sku || nama]
-        );
-        if (existing.rowCount) {
-          await client.query(
-            `UPDATE barang SET nama_barang=$2, kategori=$3, gambar=$4, ukuran=$5, type_kemasan=$6,
-               isi_karton=$7, isi_pcs=$8, stok_saat_ini=$9, harga_het=$10, harga_s1=$11, harga_s2=$12,
-               harga_s3=$13, harga_s4=$14, harga_jual=$15, sku=COALESCE($16,sku), updated_at=now() WHERE id=$1`,
-            [existing.rows[0].id, nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan,
-             data.isi_karton, data.isi_pcs, data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, sku]
-          );
-        } else {
-          await client.query(
-            `INSERT INTO barang (nama_barang, kategori, gambar, ukuran, type_kemasan, isi_karton, isi_pcs,
-               stok_saat_ini, harga_het, harga_s1, harga_s2, harga_s3, harga_s4, harga_jual, hpp, unit, sku)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,0,COALESCE($15,'pcs'),$16)`,
-            [nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan, data.isi_karton, data.isi_pcs,
-             data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, data.ukuran, sku]
-          );
-        }
-        imported++;
-      }
-      return { imported, skipped };
-    });
+    if (rows.length < 2) throw errors.badRequest('CSV harus punya baris header + minimal 1 data.');
+    const result = await importRows(rows);
     ok(res, { ...result, total_baris: rows.length - 1 });
   })
 );
