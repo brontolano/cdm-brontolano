@@ -11,6 +11,7 @@ import Pengiriman from './pages/Pengiriman';
 import Broadcasting from './pages/Broadcasting';
 import Katalog from './pages/Katalog';
 import PesananMasuk from './pages/PesananMasuk';
+import Users from './pages/Users';
 
 interface MenuItem {
   path: string;
@@ -28,6 +29,7 @@ const MENU: MenuItem[] = [
   { path: '/invoices', label: 'Invoices', icon: '💵' },
   { path: '/pengiriman', label: 'Pengiriman', icon: '🚚' },
   { path: '/broadcasting', label: 'Broadcast WA', icon: '💬', roles: ['lapangan', 'admin'] },
+  { path: '/users', label: 'Manajemen User', icon: '👥', roles: ['admin'] },
 ];
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -84,6 +86,7 @@ export default function App() {
       <Route path="/invoices" element={<Protected><Invoices /></Protected>} />
       <Route path="/pengiriman" element={<Protected><Pengiriman /></Protected>} />
       <Route path="/broadcasting" element={<Protected><Broadcasting /></Protected>} />
+      <Route path="/users" element={<Protected><Users /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
