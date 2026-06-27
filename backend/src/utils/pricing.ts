@@ -35,6 +35,49 @@ function num(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+const rp = (v: number) => 'Rp' + Math.round(v).toLocaleString('id-ID');
+
+/**
+ * Deteksi anomali harga strata (mode peringatan).
+ * Mengembalikan daftar pesan masalah; kosong = data wajar.
+ * Aturan: strata harus menurun (qty banyak = murah), tak ada lonjakan tak wajar (>2x HET),
+ * dan tak ada harga di bawah HPP (jual rugi).
+ */
+export function detectTierAnomalies(b: TierPrices & { hpp?: number | string | null }): string[] {
+  const issues: string[] = [];
+  const tiers = [
+    { label: 'HET', v: num(b.harga_het) },
+    { label: 'S1', v: num(b.harga_s1) },
+    { label: 'S2', v: num(b.harga_s2) },
+    { label: 'S3', v: num(b.harga_s3) },
+    { label: 'S4', v: num(b.harga_s4) },
+  ].filter((t) => t.v != null) as { label: string; v: number }[];
+
+  // 1) Strata harus menurun (atau sama) — tier berikut tidak boleh lebih mahal
+  for (let i = 1; i < tiers.length; i++) {
+    if (tiers[i].v > tiers[i - 1].v + 0.5) {
+      issues.push(`${tiers[i].label} (${rp(tiers[i].v)}) lebih mahal dari ${tiers[i - 1].label} (${rp(tiers[i - 1].v)}) — strata terbalik`);
+    }
+  }
+  // 2) Lonjakan tak wajar (>2x HET) — biasanya salah ketik (kelebihan nol)
+  const het = num(b.harga_het);
+  if (het && het > 0) {
+    for (const t of tiers) {
+      if (t.label !== 'HET' && t.v > het * 2) {
+        issues.push(`${t.label} (${rp(t.v)}) ~${(t.v / het).toFixed(1)}× HET — kemungkinan salah ketik`);
+      }
+    }
+  }
+  // 3) Harga di bawah HPP — jual rugi
+  const hpp = num(b.hpp);
+  if (hpp && hpp > 0) {
+    for (const t of tiers) {
+      if (t.v < hpp) issues.push(`${t.label} (${rp(t.v)}) di bawah HPP (${rp(hpp)}) — jual rugi`);
+    }
+  }
+  return issues;
+}
+
 /** Ubah "Rp 211.888" / "2.119.705" / "Rp 1.234,50" → number. */
 export function parseRupiah(s: string | number | null | undefined): number | null {
   if (s === null || s === undefined || s === '') return null;

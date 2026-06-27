@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { query, withTransaction } from '../../db/pool';
 import { asyncHandler, ok, created, errors, parsePagination } from '../../utils/http';
 import { authenticate, rbac } from '../../middleware/auth';
-import { parseRupiah } from '../../utils/pricing';
+import { parseRupiah, detectTierAnomalies } from '../../utils/pricing';
 
 const router = Router();
 router.use(authenticate);
@@ -242,6 +242,7 @@ router.get(
 async function importRows(rows: string[][]) {
   let imported = 0;
   let skipped = 0;
+  const warnings: { nama: string; issues: string[] }[] = [];
   await withTransaction(async (client) => {
     for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
@@ -263,6 +264,11 @@ async function importRows(rows: string[][]) {
         s4: parseRupiah(r[13]),
       };
       const hargaJual = data.het ?? data.s1 ?? data.s2 ?? 0;
+      // Deteksi anomali harga (mode peringatan — tetap diimpor)
+      const issues = detectTierAnomalies({
+        harga_het: data.het, harga_s1: data.s1, harga_s2: data.s2, harga_s3: data.s3, harga_s4: data.s4,
+      });
+      if (issues.length) warnings.push({ nama, issues });
       // Upsert: berdasar SKU jika ada, jika tidak berdasar nama_barang.
       const existing = await client.query(
         sku ? 'SELECT id FROM barang WHERE sku=$1' : 'SELECT id FROM barang WHERE nama_barang=$1',
@@ -288,7 +294,7 @@ async function importRows(rows: string[][]) {
       imported++;
     }
   });
-  return { imported, skipped };
+  return { imported, skipped, warnings };
 }
 
 // POST /inventory/import-csv — impor/sinkron produk dari file CSV (admin)

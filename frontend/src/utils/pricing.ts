@@ -32,6 +32,28 @@ export function hargaMulai(b: Tiers): number {
   return priceForQty(b, 1);
 }
 
+const rpFmt = (v: number) => 'Rp' + Math.round(v).toLocaleString('id-ID');
+
+/** Deteksi anomali harga strata (mode peringatan). Kosong = wajar. */
+export function detectTierAnomalies(b: Tiers & { hpp?: number | string | null }): string[] {
+  const issues: string[] = [];
+  const tiers = [
+    { label: 'HET', v: n(b.harga_het) }, { label: 'S1', v: n(b.harga_s1) }, { label: 'S2', v: n(b.harga_s2) },
+    { label: 'S3', v: n(b.harga_s3) }, { label: 'S4', v: n(b.harga_s4) },
+  ].filter((t) => t.v != null) as { label: string; v: number }[];
+  for (let i = 1; i < tiers.length; i++) {
+    if (tiers[i].v > tiers[i - 1].v + 0.5)
+      issues.push(`${tiers[i].label} (${rpFmt(tiers[i].v)}) lebih mahal dari ${tiers[i - 1].label} — strata terbalik`);
+  }
+  const het = n(b.harga_het);
+  if (het && het > 0) for (const t of tiers) if (t.label !== 'HET' && t.v > het * 2)
+    issues.push(`${t.label} (${rpFmt(t.v)}) ~${(t.v / het).toFixed(1)}× HET — kemungkinan salah ketik`);
+  const hpp = n(b.hpp);
+  if (hpp && hpp > 0) for (const t of tiers) if (t.v < hpp)
+    issues.push(`${t.label} (${rpFmt(t.v)}) di bawah HPP — jual rugi`);
+  return issues;
+}
+
 export interface GeneratedTiers {
   harga_het: number;
   harga_s1: number;

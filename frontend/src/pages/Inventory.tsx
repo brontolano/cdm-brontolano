@@ -4,7 +4,7 @@ import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Spinner, EmptyState, rupiah } from '../components/ui';
 import { fileToCompressedDataUrl } from '../utils/image';
-import { tiersFromHpp } from '../utils/pricing';
+import { tiersFromHpp, detectTierAnomalies } from '../utils/pricing';
 
 interface Barang {
   id: string;
@@ -80,7 +80,12 @@ export default function Inventory() {
     try {
       const csv = await file.text();
       const r = await api.post('/inventory/import-csv', { csv });
-      notify('success', `Import selesai: ${r.data.data.imported} produk, ${r.data.data.skipped} dilewati`);
+      const { imported, skipped, warnings } = r.data.data;
+      notify('success', `Import selesai: ${imported} produk, ${skipped} dilewati`);
+      if (warnings && warnings.length) {
+        notify('error', `⚠️ ${warnings.length} produk perlu dicek: ${warnings.slice(0, 3).map((w: any) => w.nama).join(', ')}${warnings.length > 3 ? ', …' : ''}`);
+        console.warn('Anomali harga import:', warnings);
+      }
       load();
     } catch (err) { notify('error', apiError(err)); }
     finally { setImporting(false); }
@@ -110,6 +115,12 @@ export default function Inventory() {
 
   async function saveBarang(e: React.FormEvent) {
     e.preventDefault();
+    // Anti-anomali: peringatkan jika harga janggal, tapi tetap boleh lanjut
+    const anomalies = detectTierAnomalies({
+      hpp: Number(form.hpp), harga_het: form.harga_het, harga_s1: form.harga_s1,
+      harga_s2: form.harga_s2, harga_s3: form.harga_s3, harga_s4: form.harga_s4,
+    });
+    if (anomalies.length && !confirm('⚠️ Ada kemungkinan harga janggal:\n\n• ' + anomalies.join('\n• ') + '\n\nTetap simpan?')) return;
     try {
       // harga_jual mengikuti tier terendah (HET) bila diisi, agar konsisten.
       const hargaJual = form.harga_het != null ? Number(form.harga_het) : Number(form.harga_jual);
