@@ -206,18 +206,24 @@ router.post(
   '/:id/masuk',
   rbac('gudang', 'admin'),
   asyncHandler(async (req, res) => {
-    const { jumlah, keterangan } = z
-      .object({ jumlah: z.number().int().positive(), keterangan: z.string().optional() })
+    const { jumlah, keterangan, foto, hpp_baru } = z
+      .object({
+        jumlah: z.number().int().positive(),
+        keterangan: z.string().optional(),
+        foto: z.string().nullable().optional(),       // bukti nota base64
+        hpp_baru: z.number().nonnegative().nullable().optional(),
+      })
       .parse(req.body);
     const result = await withTransaction(async (client) => {
       const upd = await client.query(
-        `UPDATE barang SET stok_saat_ini = stok_saat_ini + $1, updated_at=now() WHERE id=$2 RETURNING *`,
-        [jumlah, req.params.id]
+        `UPDATE barang SET stok_saat_ini = stok_saat_ini + $1,
+           hpp = COALESCE($2, hpp), updated_at=now() WHERE id=$3 RETURNING *`,
+        [jumlah, hpp_baru ?? null, req.params.id]
       );
       if (!upd.rowCount) throw errors.notFound('Barang tidak ditemukan');
       await client.query(
-        `INSERT INTO stok_history (barang_id, tipe, jumlah, keterangan, created_by) VALUES ($1,'masuk',$2,$3,$4)`,
-        [req.params.id, jumlah, keterangan ?? 'Restock', req.user!.id]
+        `INSERT INTO stok_history (barang_id, tipe, jumlah, keterangan, foto, created_by) VALUES ($1,'masuk',$2,$3,$4,$5)`,
+        [req.params.id, jumlah, keterangan ?? 'Restock', foto ?? null, req.user!.id]
       );
       return upd.rows[0];
     });
