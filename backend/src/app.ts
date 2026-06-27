@@ -4,6 +4,7 @@ import { config } from './config';
 import { notFoundHandler, errorHandler } from './middleware/error';
 
 import authRoutes from './modules/auth/auth.routes';
+import catalogRoutes from './modules/catalog/catalog.routes';
 import konsumenRoutes from './modules/konsumen/konsumen.routes';
 import inventoryRoutes from './modules/inventory/inventory.routes';
 import ordersRoutes from './modules/orders/orders.routes';
@@ -19,6 +20,7 @@ export function createApp() {
 
   app.get('/health', (_req, res) => res.json({ success: true, data: { status: 'ok', time: new Date().toISOString() } }));
 
+  app.use('/api/public/catalog', catalogRoutes); // publik, tanpa login
   app.use('/api/auth', authRoutes);
   app.use('/api/konsumen', konsumenRoutes);
   app.use('/api/inventory', inventoryRoutes);

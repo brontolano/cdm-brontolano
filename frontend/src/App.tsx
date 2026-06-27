@@ -9,6 +9,7 @@ import Orders from './pages/Orders';
 import Invoices from './pages/Invoices';
 import Pengiriman from './pages/Pengiriman';
 import Broadcasting from './pages/Broadcasting';
+import Katalog from './pages/Katalog';
 
 interface MenuItem {
   path: string;
@@ -70,6 +71,8 @@ export default function App() {
   if (loading) return <Spinner />;
   return (
     <Routes>
+      {/* Katalog publik — tanpa login (nanti dilayani di katalog.brontolano.com) */}
+      <Route path="/katalog" element={<Katalog />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/konsumen" element={<Protected><Konsumen /></Protected>} />
