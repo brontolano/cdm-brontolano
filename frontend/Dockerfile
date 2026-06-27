@@ -7,6 +7,9 @@ COPY . .
 # Use same-origin /api so the build is portable across environments
 # (nginx proxies /api to the backend container).
 ENV VITE_API_URL=/api
+# Nomor WhatsApp tujuan pesanan katalog (di-inject saat build dari compose args)
+ARG VITE_WA_ORDER_NUMBER=628557271197
+ENV VITE_WA_ORDER_NUMBER=$VITE_WA_ORDER_NUMBER
 RUN npm run build
 
 # ---- runtime stage ----

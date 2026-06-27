@@ -41,7 +41,10 @@ services:
     #   - "4000:4000"
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_WA_ORDER_NUMBER: ${WA_ORDER_NUMBER:-628557271197}
     container_name: cdm-frontend
     restart: unless-stopped
     depends_on:
@@ -51,7 +54,10 @@ services:
 
   # Katalog konsumen — image sama, tapi root diarahkan ke /katalog (port terpisah).
   katalog:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_WA_ORDER_NUMBER: ${WA_ORDER_NUMBER:-628557271197}
     container_name: cdm-katalog
     restart: unless-stopped
     depends_on:
@@ -63,7 +69,10 @@ services:
 
   # PWA Staff Lapangan — image sama, root diarahkan ke /lapangan (port terpisah).
   lapangan:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_WA_ORDER_NUMBER: ${WA_ORDER_NUMBER:-628557271197}
     container_name: cdm-lapangan
     restart: unless-stopped
     depends_on:
@@ -75,7 +84,10 @@ services:
 
   # PWA Staff Gudang — image sama, root diarahkan ke /gudang (port terpisah).
   gudang:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_WA_ORDER_NUMBER: ${WA_ORDER_NUMBER:-628557271197}
     container_name: cdm-gudang
     restart: unless-stopped
     depends_on:
