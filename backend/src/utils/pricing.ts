@@ -35,6 +35,21 @@ function num(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+export interface GeneratedTiers {
+  harga_het: number; harga_s1: number; harga_s2: number; harga_s3: number; harga_s4: number;
+}
+
+/** Auto-generate 5 strata harga dari HPP (margin turun linear HET->S4, cap di batasHet). */
+export function tiersFromHpp(hpp: number, marginHet = 15, marginFloor = 10, round = 100, batasHet?: number | null): GeneratedTiers {
+  const margins = [0, 1, 2, 3, 4].map((i) => marginHet + ((marginFloor - marginHet) * i) / 4);
+  const price = (m: number) => {
+    let raw = hpp * (1 + m / 100);
+    if (batasHet && batasHet > 0) raw = Math.min(raw, batasHet);
+    return round > 0 ? Math.round(raw / round) * round : Math.round(raw);
+  };
+  return { harga_het: price(margins[0]), harga_s1: price(margins[1]), harga_s2: price(margins[2]), harga_s3: price(margins[3]), harga_s4: price(margins[4]) };
+}
+
 const rp = (v: number) => 'Rp' + Math.round(v).toLocaleString('id-ID');
 
 /**
