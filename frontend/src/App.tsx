@@ -10,6 +10,7 @@ import Invoices from './pages/Invoices';
 import Pengiriman from './pages/Pengiriman';
 import Broadcasting from './pages/Broadcasting';
 import Katalog from './pages/Katalog';
+import PesananMasuk from './pages/PesananMasuk';
 
 interface MenuItem {
   path: string;
@@ -22,6 +23,7 @@ const MENU: MenuItem[] = [
   { path: '/', label: 'Dashboard', icon: '📊' },
   { path: '/konsumen', label: 'Konsumen', icon: '🏪' },
   { path: '/inventory', label: 'Inventory', icon: '📦' },
+  { path: '/pesanan', label: 'Pesanan Masuk', icon: '📥' },
   { path: '/orders', label: 'Orders', icon: '🧾' },
   { path: '/invoices', label: 'Invoices', icon: '💵' },
   { path: '/pengiriman', label: 'Pengiriman', icon: '🚚' },
@@ -77,6 +79,7 @@ export default function App() {
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/konsumen" element={<Protected><Konsumen /></Protected>} />
       <Route path="/inventory" element={<Protected><Inventory /></Protected>} />
+      <Route path="/pesanan" element={<Protected><PesananMasuk /></Protected>} />
       <Route path="/orders" element={<Protected><Orders /></Protected>} />
       <Route path="/invoices" element={<Protected><Invoices /></Protected>} />
       <Route path="/pengiriman" element={<Protected><Pengiriman /></Protected>} />

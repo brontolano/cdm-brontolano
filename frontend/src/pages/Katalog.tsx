@@ -67,12 +67,33 @@ export default function Katalog() {
   const total = cartItems.reduce((s, i) => s + i.subtotal, 0);
   const totalQty = cartItems.reduce((s, i) => s + i.qty, 0);
 
-  function orderViaWA() {
-    if (!cartItems.length) return;
+  const [checkout, setCheckout] = useState(false);
+  const [ck, setCk] = useState({ nama: '', kontak_wa: '', alamat: '' });
+  const [sending, setSending] = useState(false);
+
+  function waMessage() {
     let msg = '*Pesanan Grosir Brontolano*\n\n';
+    if (ck.nama) msg += `Pemesan: ${ck.nama}\n`;
+    if (ck.alamat) msg += `Alamat: ${ck.alamat}\n`;
+    msg += '\n';
     cartItems.forEach((i, idx) => { msg += `${idx + 1}. ${i.p.nama_barang}${i.p.sku ? ` (${i.p.sku})` : ''}\n   ${i.qty} karton x ${rupiah(i.harga)} (Tier ${tierInfo(i.qty).key}) = ${rupiah(i.subtotal)}\n`; });
     msg += `\n*Total: ${rupiah(total)}*\n\nMohon konfirmasi ketersediaan & ongkir. Terima kasih.`;
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+    return msg;
+  }
+
+  async function submitOrder(e: React.FormEvent) {
+    e.preventDefault();
+    if (!cartItems.length) return;
+    setSending(true);
+    try {
+      // Simpan pesanan ke sistem (harga dihitung ulang di server)
+      await api.post('/public/catalog/order', {
+        nama: ck.nama, kontak_wa: ck.kontak_wa, alamat: ck.alamat || undefined,
+        items: cartItems.map((i) => ({ barang_id: i.p.id, jumlah: i.qty })),
+      }).catch(() => {}); // jangan blokir WA jika simpan gagal
+      window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waMessage())}`, '_blank');
+      setCheckout(false); setShowCart(false); setCart({});
+    } finally { setSending(false); }
   }
 
   return (
@@ -192,11 +213,30 @@ export default function Katalog() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 17 }}>
                 <span>Total</span><strong>{rupiah(total)}</strong>
               </div>
-              <button onClick={orderViaWA} disabled={!cartItems.length} style={S.waBtn}>
-                <span style={{ fontSize: 18 }}></span> Kirim Pesanan via WhatsApp
+              <button onClick={() => setCheckout(true)} disabled={!cartItems.length} style={S.waBtn}>
+                Lanjut Pesan via WhatsApp
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Checkout: data pemesan sebelum kirim WA */}
+      {checkout && (
+        <div style={S.sheetOverlay} onClick={() => setCheckout(false)}>
+          <form style={{ ...S.sheet, maxHeight: 'none' }} onClick={(e) => e.stopPropagation()} onSubmit={submitOrder}>
+            <div style={S.sheetHandle} />
+            <div style={S.sheetHead}><strong>Data Pemesan</strong><button type="button" onClick={() => setCheckout(false)} style={S.closeBtn}>✕</button></div>
+            <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input placeholder="Nama *" value={ck.nama} onChange={(e) => setCk({ ...ck, nama: e.target.value })} required style={S.ckInput} />
+              <input placeholder="Nomor WhatsApp *" value={ck.kontak_wa} onChange={(e) => setCk({ ...ck, kontak_wa: e.target.value })} required inputMode="tel" style={S.ckInput} />
+              <textarea placeholder="Alamat (opsional)" value={ck.alamat} onChange={(e) => setCk({ ...ck, alamat: e.target.value })} style={{ ...S.ckInput, minHeight: 60 }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16 }}><span>Total</span><strong>{rupiah(total)}</strong></div>
+            </div>
+            <div style={S.sheetFoot}>
+              <button type="submit" disabled={sending} style={S.waBtn}>{sending ? 'Mengirim…' : 'Kirim Pesanan via WhatsApp'}</button>
+            </div>
+          </form>
         </div>
       )}
     </div>
@@ -248,4 +288,5 @@ const S: Record<string, React.CSSProperties> = {
   cartRow: { display: 'flex', gap: 10, alignItems: 'center', paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid #f1f5f9' },
   sheetFoot: { padding: '14px 16px calc(16px + env(safe-area-inset-bottom))', borderTop: '1px solid #eef2f7' },
   waBtn: { width: '100%', background: '#25D366', color: '#fff', border: 'none', borderRadius: 12, padding: '15px 0', fontWeight: 800, fontSize: 15 },
+  ckInput: { width: '100%', padding: 12, borderRadius: 10, border: '1px solid #d1d5db', fontSize: 15 },
 };

@@ -5,6 +5,7 @@ import { notFoundHandler, errorHandler } from './middleware/error';
 
 import authRoutes from './modules/auth/auth.routes';
 import catalogRoutes from './modules/catalog/catalog.routes';
+import pesananRoutes from './modules/pesanan/pesanan.routes';
 import konsumenRoutes from './modules/konsumen/konsumen.routes';
 import inventoryRoutes from './modules/inventory/inventory.routes';
 import ordersRoutes from './modules/orders/orders.routes';
@@ -27,6 +28,7 @@ export function createApp() {
   app.use('/api/orders', ordersRoutes);
   app.use('/api/invoices', invoicesRoutes);
   app.use('/api/pengiriman', pengirimanRoutes);
+  app.use('/api/pesanan', pesananRoutes);
   app.use('/api/broadcast', broadcastRoutes);
   app.use('/api/dashboard', dashboardRoutes);
 
