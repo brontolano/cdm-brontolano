@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { asyncHandler, ok, created } from '../../utils/http';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, rbac } from '../../middleware/auth';
 import * as service from './auth.service';
 
 const router = Router();
@@ -13,8 +13,11 @@ const registerSchema = z.object({
   role: z.enum(['lapangan', 'gudang', 'admin', 'management']),
 });
 
+// Hanya ADMIN yang boleh membuat user (cegah pendaftaran publik sebagai admin).
 router.post(
   '/register',
+  authenticate,
+  rbac('admin'),
   asyncHandler(async (req, res) => {
     const input = registerSchema.parse(req.body);
     created(res, await service.register(input));
