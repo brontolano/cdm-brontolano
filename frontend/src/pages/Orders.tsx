@@ -3,6 +3,7 @@ import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState, rupiah } from '../components/ui';
+import { priceForQty, tierInfo } from '../utils/pricing';
 
 export default function Orders() {
   const { user } = useAuth();
@@ -35,7 +36,7 @@ export default function Orders() {
 
   const total = items.reduce((sum, it) => {
     const b = barang.find((x) => x.id === it.barang_id);
-    return sum + (b ? Number(b.harga_jual) * it.jumlah : 0);
+    return sum + (b ? priceForQty(b, it.jumlah) * it.jumlah : 0);
   }, 0);
 
   async function submit(e: React.FormEvent) {
@@ -100,20 +101,31 @@ export default function Orders() {
               </select>
             </div>
             <label style={{ fontSize: 13, fontWeight: 600 }}>Barang</label>
-            {items.map((it, idx) => (
-              <div className="row" key={idx} style={{ alignItems: 'flex-end', marginBottom: 8 }}>
-                <div className="field" style={{ marginBottom: 0, flex: 2 }}>
-                  <select value={it.barang_id} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, barang_id: e.target.value } : x))} required>
-                    <option value="">— barang —</option>
-                    {barang.map((b) => <option key={b.id} value={b.id}>{b.nama_barang} ({rupiah(b.harga_jual)}, stok {b.stok_saat_ini})</option>)}
-                  </select>
+            {items.map((it, idx) => {
+              const b = barang.find((x) => x.id === it.barang_id);
+              const harga = b ? priceForQty(b, it.jumlah) : 0;
+              return (
+                <div key={idx} style={{ marginBottom: 8 }}>
+                  <div className="row" style={{ alignItems: 'flex-end' }}>
+                    <div className="field" style={{ marginBottom: 0, flex: 2 }}>
+                      <select value={it.barang_id} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, barang_id: e.target.value } : x))} required>
+                        <option value="">— barang —</option>
+                        {barang.map((b2) => <option key={b2.id} value={b2.id}>{b2.nama_barang} (stok {b2.stok_saat_ini})</option>)}
+                      </select>
+                    </div>
+                    <div className="field" style={{ marginBottom: 0 }}>
+                      <input type="number" min={1} value={it.jumlah} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, jumlah: Number(e.target.value) } : x))} />
+                    </div>
+                    <button type="button" className="btn secondary small" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>✕</button>
+                  </div>
+                  {b && it.jumlah > 0 && (
+                    <div style={{ fontSize: 12, color: '#16a34a', marginTop: 3 }}>
+                      Tier {tierInfo(it.jumlah).key}: {rupiah(harga)} × {it.jumlah} = <b>{rupiah(harga * it.jumlah)}</b>
+                    </div>
+                  )}
                 </div>
-                <div className="field" style={{ marginBottom: 0 }}>
-                  <input type="number" min={1} value={it.jumlah} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, jumlah: Number(e.target.value) } : x))} />
-                </div>
-                <button type="button" className="btn secondary small" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>✕</button>
-              </div>
-            ))}
+              );
+            })}
             <button type="button" className="btn secondary small" onClick={() => setItems([...items, { barang_id: '', jumlah: 1 }])}>+ Tambah barang</button>
             <div className="field" style={{ marginTop: 12 }}><label>Catatan</label><input value={catatan} onChange={(e) => setCatatan(e.target.value)} /></div>
             <p className="right"><b>Total: {rupiah(total)}</b></p>

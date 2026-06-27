@@ -1,6 +1,7 @@
 import { query, withTransaction } from '../../db/pool';
 import { errors } from '../../utils/http';
 import { nextDocNumber } from '../../utils/sequence';
+import { priceForQty } from '../../utils/pricing';
 
 export interface OrderItemInput {
   barang_id: string;
@@ -24,13 +25,18 @@ export async function createOrder(input: {
     let total = 0;
     const lineItems: { barang_id: string; jumlah: number; harga_satuan: number; subtotal: number }[] = [];
     for (const item of input.items) {
-      const b = await client.query('SELECT id, nama_barang, harga_jual, stok_saat_ini FROM barang WHERE id=$1', [item.barang_id]);
+      const b = await client.query(
+        `SELECT id, nama_barang, harga_jual, stok_saat_ini,
+                harga_het, harga_s1, harga_s2, harga_s3, harga_s4 FROM barang WHERE id=$1`,
+        [item.barang_id]
+      );
       if (!b.rowCount) throw errors.notFound(`Barang ${item.barang_id} tidak ditemukan`);
       const barang = b.rows[0];
       if (item.jumlah > barang.stok_saat_ini) {
         throw errors.unprocessable(`Stok tidak cukup untuk ${barang.nama_barang} (tersedia ${barang.stok_saat_ini})`);
       }
-      const harga = Number(barang.harga_jual);
+      // Harga otomatis mengikuti tier grosir berdasarkan jumlah (karton)
+      const harga = priceForQty(barang, item.jumlah);
       const subtotal = harga * item.jumlah;
       total += subtotal;
       lineItems.push({ barang_id: barang.id, jumlah: item.jumlah, harga_satuan: harga, subtotal });
