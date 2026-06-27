@@ -4,6 +4,7 @@ import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Spinner, EmptyState, rupiah } from '../components/ui';
 import { fileToCompressedDataUrl } from '../utils/image';
+import { tiersFromHpp } from '../utils/pricing';
 
 interface Barang {
   id: string;
@@ -83,6 +84,17 @@ export default function Inventory() {
       load();
     } catch (err) { notify('error', apiError(err)); }
     finally { setImporting(false); }
+  }
+
+  const [marginHet, setMarginHet] = useState(15);
+  const [marginFloor, setMarginFloor] = useState(10);
+  function autoTiers() {
+    const hpp = Number(form.hpp);
+    if (!hpp || hpp <= 0) { notify('error', 'Isi HPP dulu (lebih dari 0)'); return; }
+    if (marginFloor > marginHet) { notify('error', 'Margin terendah tidak boleh lebih besar dari margin HET'); return; }
+    const t = tiersFromHpp(hpp, marginHet, marginFloor);
+    setForm((f: any) => ({ ...f, ...t }));
+    notify('success', `5 tier dihitung dari HPP ${rupiah(hpp)} (margin ${marginHet}%→${marginFloor}%)`);
   }
 
   async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -207,6 +219,21 @@ export default function Inventory() {
               <div className="field"><label>Isi / Karton</label><input type="number" value={form.isi_karton ?? ''} onChange={(e) => setForm({ ...form, isi_karton: e.target.value === '' ? null : Number(e.target.value) })} /></div>
               <div className="field"><label>Isi Pcs</label><input type="number" value={form.isi_pcs ?? ''} onChange={(e) => setForm({ ...form, isi_pcs: e.target.value === '' ? null : Number(e.target.value) })} /></div>
               <div className="field"><label>HPP</label><input type="number" value={form.hpp} onChange={(e) => setForm({ ...form, hpp: e.target.value })} required /></div>
+            </div>
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>⚡ Hitung otomatis dari HPP</div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                <div className="field" style={{ marginBottom: 0, maxWidth: 130 }}>
+                  <label style={{ fontWeight: 400 }}>Margin HET %</label>
+                  <input type="number" value={marginHet} onChange={(e) => setMarginHet(Number(e.target.value))} />
+                </div>
+                <div className="field" style={{ marginBottom: 0, maxWidth: 150 }}>
+                  <label style={{ fontWeight: 400 }}>Margin terendah %</label>
+                  <input type="number" value={marginFloor} onChange={(e) => setMarginFloor(Number(e.target.value))} />
+                </div>
+                <button type="button" className="btn small" onClick={autoTiers}>Hitung 5 tier</button>
+              </div>
+              <small className="muted">Margin grosir pasar 10–25%. Default 15%→10% (HET termahal, S4 partai besar termurah).</small>
             </div>
             <label style={{ fontSize: 13, fontWeight: 600 }}>Harga grosir berjenjang (per qty)</label>
             <div className="row" style={{ gap: 6 }}>

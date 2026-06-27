@@ -31,3 +31,32 @@ export function priceForQty(b: Tiers, qty: number): number {
 export function hargaMulai(b: Tiers): number {
   return priceForQty(b, 1);
 }
+
+export interface GeneratedTiers {
+  harga_het: number;
+  harga_s1: number;
+  harga_s2: number;
+  harga_s3: number;
+  harga_s4: number;
+}
+
+/**
+ * Auto-generate 5 strata harga dari HPP berdasarkan margin pasar grosir.
+ * Margin turun bertahap (linear) dari `marginHet`% (qty kecil) ke `marginFloor`% (partai besar).
+ * Hasil dibulatkan ke `round` terdekat (default 100) agar harga rapi.
+ * Default 15% → 10% sesuai riset margin grosir sembako (10–25%) & spread Brontolano (~4,3%).
+ */
+export function tiersFromHpp(hpp: number, marginHet = 15, marginFloor = 10, round = 100): GeneratedTiers {
+  const margins = [0, 1, 2, 3, 4].map((i) => marginHet + ((marginFloor - marginHet) * i) / 4);
+  const price = (m: number) => {
+    const raw = hpp * (1 + m / 100);
+    return round > 0 ? Math.round(raw / round) * round : Math.round(raw);
+  };
+  return {
+    harga_het: price(margins[0]),
+    harga_s1: price(margins[1]),
+    harga_s2: price(margins[2]),
+    harga_s3: price(margins[3]),
+    harga_s4: price(margins[4]),
+  };
+}
