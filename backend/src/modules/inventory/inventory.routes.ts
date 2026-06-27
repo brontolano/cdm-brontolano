@@ -243,6 +243,7 @@ async function importRows(rows: string[][]) {
   let imported = 0;
   let skipped = 0;
   const warnings: { nama: string; issues: string[] }[] = [];
+  const failed: { nama: string; error: string }[] = [];
   await withTransaction(async (client) => {
     for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
@@ -269,32 +270,40 @@ async function importRows(rows: string[][]) {
         harga_het: data.het, harga_s1: data.s1, harga_s2: data.s2, harga_s3: data.s3, harga_s4: data.s4,
       });
       if (issues.length) warnings.push({ nama, issues });
-      // Upsert: berdasar SKU jika ada, jika tidak berdasar nama_barang.
-      const existing = await client.query(
-        sku ? 'SELECT id FROM barang WHERE sku=$1' : 'SELECT id FROM barang WHERE nama_barang=$1',
-        [sku || nama]
-      );
-      if (existing.rowCount) {
-        await client.query(
-          `UPDATE barang SET nama_barang=$2, kategori=$3, gambar=$4, ukuran=$5, type_kemasan=$6,
-             isi_karton=$7, isi_pcs=$8, stok_saat_ini=$9, harga_het=$10, harga_s1=$11, harga_s2=$12,
-             harga_s3=$13, harga_s4=$14, harga_jual=$15, sku=COALESCE($16,sku), updated_at=now() WHERE id=$1`,
-          [existing.rows[0].id, nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan,
-           data.isi_karton, data.isi_pcs, data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, sku]
+      // Per-baris savepoint: jika 1 baris gagal, baris lain tetap terimpor.
+      await client.query('SAVEPOINT row_sp');
+      try {
+        // Cocokkan berdasar SKU ATAU nama_barang (hindari bentrok unique nama).
+        const existing = await client.query(
+          'SELECT id FROM barang WHERE (sku IS NOT NULL AND sku=$1) OR nama_barang=$2 LIMIT 1',
+          [sku, nama]
         );
-      } else {
-        await client.query(
-          `INSERT INTO barang (nama_barang, kategori, gambar, ukuran, type_kemasan, isi_karton, isi_pcs,
-             stok_saat_ini, harga_het, harga_s1, harga_s2, harga_s3, harga_s4, harga_jual, hpp, unit, sku)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,0,COALESCE($15,'pcs'),$16)`,
-          [nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan, data.isi_karton, data.isi_pcs,
-           data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, data.ukuran, sku]
-        );
+        if (existing.rowCount) {
+          await client.query(
+            `UPDATE barang SET nama_barang=$2, kategori=$3, gambar=$4, ukuran=$5, type_kemasan=$6,
+               isi_karton=$7, isi_pcs=$8, stok_saat_ini=$9, harga_het=$10, harga_s1=$11, harga_s2=$12,
+               harga_s3=$13, harga_s4=$14, harga_jual=$15, sku=COALESCE($16,sku), updated_at=now() WHERE id=$1`,
+            [existing.rows[0].id, nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan,
+             data.isi_karton, data.isi_pcs, data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, sku]
+          );
+        } else {
+          await client.query(
+            `INSERT INTO barang (nama_barang, kategori, gambar, ukuran, type_kemasan, isi_karton, isi_pcs,
+               stok_saat_ini, harga_het, harga_s1, harga_s2, harga_s3, harga_s4, harga_jual, hpp, unit, sku)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,0,COALESCE($15,'pcs'),$16)`,
+            [nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan, data.isi_karton, data.isi_pcs,
+             data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, data.ukuran, sku]
+          );
+        }
+        await client.query('RELEASE SAVEPOINT row_sp');
+        imported++;
+      } catch (e: any) {
+        await client.query('ROLLBACK TO SAVEPOINT row_sp');
+        failed.push({ nama, error: e?.code === '23505' ? 'duplikat (SKU/nama bentrok)' : (e?.message || 'gagal') });
       }
-      imported++;
     }
   });
-  return { imported, skipped, warnings };
+  return { imported, skipped, warnings, failed };
 }
 
 // POST /inventory/import-csv — impor/sinkron produk dari file CSV (admin)

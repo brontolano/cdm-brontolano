@@ -80,8 +80,12 @@ export default function Inventory() {
     try {
       const csv = await file.text();
       const r = await api.post('/inventory/import-csv', { csv });
-      const { imported, skipped, warnings } = r.data.data;
-      notify('success', `Import selesai: ${imported} produk, ${skipped} dilewati`);
+      const { imported, skipped, warnings, failed } = r.data.data;
+      notify('success', `Import selesai: ${imported} produk${skipped ? `, ${skipped} dilewati` : ''}`);
+      if (failed && failed.length) {
+        notify('error', `❌ ${failed.length} baris gagal: ${failed.slice(0, 3).map((f: any) => `${f.nama} (${f.error})`).join(', ')}${failed.length > 3 ? ', …' : ''}`);
+        console.warn('Baris gagal import:', failed);
+      }
       if (warnings && warnings.length) {
         notify('error', `⚠️ ${warnings.length} produk perlu dicek: ${warnings.slice(0, 3).map((w: any) => w.nama).join(', ')}${warnings.length > 3 ? ', …' : ''}`);
         console.warn('Anomali harga import:', warnings);
