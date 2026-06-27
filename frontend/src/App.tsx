@@ -12,6 +12,10 @@ import Broadcasting from './pages/Broadcasting';
 import Katalog from './pages/Katalog';
 import PesananMasuk from './pages/PesananMasuk';
 import Users from './pages/Users';
+import LapanganHome from './pages/lapangan/LapanganHome';
+import LapanganPengiriman from './pages/lapangan/LapanganPengiriman';
+import LapanganKonsumen from './pages/lapangan/LapanganKonsumen';
+import LapanganPos from './pages/lapangan/LapanganPos';
 
 interface MenuItem {
   path: string;
@@ -70,13 +74,28 @@ function Protected({ children }: { children: React.ReactNode }) {
   return <Layout>{children}</Layout>;
 }
 
+// Halaman mobile penuh (PWA staff) tanpa sidebar — gating per role.
+function MobileProtected({ roles, children }: { roles: Role[]; children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!roles.includes(user.role)) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 export default function App() {
   const { user, loading } = useAuth();
   if (loading) return <Spinner />;
+  const lap: Role[] = ['lapangan', 'admin'];
   return (
     <Routes>
       {/* Katalog publik — tanpa login (nanti dilayani di katalog.brontolano.com) */}
       <Route path="/katalog" element={<Katalog />} />
+      {/* PWA Staff Lapangan (mobile) */}
+      <Route path="/lapangan" element={<MobileProtected roles={lap}><LapanganHome /></MobileProtected>} />
+      <Route path="/lapangan/pengiriman" element={<MobileProtected roles={lap}><LapanganPengiriman /></MobileProtected>} />
+      <Route path="/lapangan/konsumen" element={<MobileProtected roles={lap}><LapanganKonsumen /></MobileProtected>} />
+      <Route path="/lapangan/pos" element={<MobileProtected roles={lap}><LapanganPos /></MobileProtected>} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/konsumen" element={<Protected><Konsumen /></Protected>} />

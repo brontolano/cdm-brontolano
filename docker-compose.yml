@@ -61,6 +61,18 @@ services:
     ports:
       - "${KATALOG_PORT:-8090}:80"
 
+  # PWA Staff Lapangan — image sama, root diarahkan ke /lapangan (port terpisah).
+  lapangan:
+    build: ./frontend
+    container_name: cdm-lapangan
+    restart: unless-stopped
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/nginx-lapangan.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${LAPANGAN_PORT:-8091}:80"
+
   # Backup otomatis harian (pg_dump terjadwal ke ./backups). Hapus service ini bila tak perlu.
   backup:
     image: postgres:17-alpine
