@@ -32,6 +32,15 @@ export function hargaMulai(b: Tiers): number {
   return priceForQty(b, 1);
 }
 
+/** Info tier untuk jumlah (karton) tertentu: kode + rentang qty. */
+export function tierInfo(qty: number): { key: string; range: string } {
+  if (qty >= 151) return { key: 'S4', range: '>150' };
+  if (qty >= 25) return { key: 'S3', range: '25–150' };
+  if (qty >= 10) return { key: 'S2', range: '10–24' };
+  if (qty >= 6) return { key: 'S1', range: '6–9' };
+  return { key: 'HET', range: '1–5' };
+}
+
 const rpFmt = (v: number) => 'Rp' + Math.round(v).toLocaleString('id-ID');
 
 /** Deteksi anomali harga strata (mode peringatan). Kosong = wajar. */
