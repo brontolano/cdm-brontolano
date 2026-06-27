@@ -1,0 +1,149 @@
+import { useEffect, useState } from 'react';
+import { api, apiError } from '../api/client';
+import { useAuth } from '../store/auth';
+import { useToast } from '../store/toast';
+import { Modal, Badge, Spinner, EmptyState, rupiah } from '../components/ui';
+
+export default function Orders() {
+  const { user } = useAuth();
+  const { notify } = useToast();
+  const isAdmin = user?.role === 'admin';
+  const [list, setList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [konsumen, setKonsumen] = useState<any[]>([]);
+  const [barang, setBarang] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [detail, setDetail] = useState<any>(null);
+  const [konsumenId, setKonsumenId] = useState('');
+  const [catatan, setCatatan] = useState('');
+  const [items, setItems] = useState<{ barang_id: string; jumlah: number }[]>([{ barang_id: '', jumlah: 1 }]);
+
+  async function load() {
+    setLoading(true);
+    try { setList((await api.get('/orders', { params: { limit: 100 } })).data.data); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { load(); }, []);
+
+  async function openForm() {
+    const [k, b] = await Promise.all([api.get('/konsumen', { params: { limit: 100 } }), api.get('/inventory', { params: { limit: 100 } })]);
+    setKonsumen(k.data.data);
+    setBarang(b.data.data);
+    setKonsumenId(''); setCatatan(''); setItems([{ barang_id: '', jumlah: 1 }]);
+    setShowForm(true);
+  }
+
+  const total = items.reduce((sum, it) => {
+    const b = barang.find((x) => x.id === it.barang_id);
+    return sum + (b ? Number(b.harga_jual) * it.jumlah : 0);
+  }, 0);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const payload = { konsumen_id: konsumenId, catatan, items: items.filter((i) => i.barang_id && i.jumlah > 0) };
+      const r = await api.post('/orders', payload);
+      notify('success', `Order ${r.data.data.order.nomor_order} dibuat — invoice ${r.data.data.invoice.nomor_invoice}`);
+      setShowForm(false);
+      load();
+    } catch (err) { notify('error', apiError(err)); }
+  }
+
+  async function openDetail(id: string) { setDetail((await api.get(`/orders/${id}`)).data.data); }
+  async function confirmOrder(id: string) {
+    try {
+      const r = await api.post(`/orders/${id}/confirm`);
+      const low = r.data.data.low_stock_alert;
+      notify('success', `Order dikonfirmasi, stok dikurangi.${low?.length ? ' ⚠️ Stok rendah: ' + low.join(', ') : ''}`);
+      setDetail(null); load();
+    } catch (err) { notify('error', apiError(err)); }
+  }
+  async function cancelOrder(id: string) {
+    if (!confirm('Batalkan order ini?')) return;
+    try { await api.post(`/orders/${id}/cancel`); notify('info', 'Order dibatalkan'); setDetail(null); load(); }
+    catch (err) { notify('error', apiError(err)); }
+  }
+
+  return (
+    <div>
+      <div className="toolbar">
+        <h2>Orders</h2>
+        {isAdmin && <button className="btn" onClick={openForm}>+ Buat Order</button>}
+      </div>
+
+      <div className="card" style={{ padding: 0 }}>
+        {loading ? <Spinner /> : list.length === 0 ? <EmptyState message="Belum ada order." /> : (
+          <table>
+            <thead><tr><th>No. Order</th><th>Toko</th><th>Total</th><th>Status</th><th>Tanggal</th><th></th></tr></thead>
+            <tbody>
+              {list.map((o) => (
+                <tr key={o.id}>
+                  <td>{o.nomor_order}</td><td>{o.nama_toko}</td><td>{rupiah(o.total_harga)}</td>
+                  <td><Badge value={o.status} /></td>
+                  <td>{new Date(o.tanggal_order).toLocaleDateString('id-ID')}</td>
+                  <td className="right"><button className="btn secondary small" onClick={() => openDetail(o.id)}>Detail</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {showForm && (
+        <Modal title="Buat Order Baru" onClose={() => setShowForm(false)}>
+          <form onSubmit={submit}>
+            <div className="field">
+              <label>Konsumen</label>
+              <select value={konsumenId} onChange={(e) => setKonsumenId(e.target.value)} required>
+                <option value="">— pilih konsumen —</option>
+                {konsumen.map((k) => <option key={k.id} value={k.id}>{k.nama_toko} ({k.nama_pemilik})</option>)}
+              </select>
+            </div>
+            <label style={{ fontSize: 13, fontWeight: 600 }}>Barang</label>
+            {items.map((it, idx) => (
+              <div className="row" key={idx} style={{ alignItems: 'flex-end', marginBottom: 8 }}>
+                <div className="field" style={{ marginBottom: 0, flex: 2 }}>
+                  <select value={it.barang_id} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, barang_id: e.target.value } : x))} required>
+                    <option value="">— barang —</option>
+                    {barang.map((b) => <option key={b.id} value={b.id}>{b.nama_barang} ({rupiah(b.harga_jual)}, stok {b.stok_saat_ini})</option>)}
+                  </select>
+                </div>
+                <div className="field" style={{ marginBottom: 0 }}>
+                  <input type="number" min={1} value={it.jumlah} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, jumlah: Number(e.target.value) } : x))} />
+                </div>
+                <button type="button" className="btn secondary small" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>✕</button>
+              </div>
+            ))}
+            <button type="button" className="btn secondary small" onClick={() => setItems([...items, { barang_id: '', jumlah: 1 }])}>+ Tambah barang</button>
+            <div className="field" style={{ marginTop: 12 }}><label>Catatan</label><input value={catatan} onChange={(e) => setCatatan(e.target.value)} /></div>
+            <p className="right"><b>Total: {rupiah(total)}</b></p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn secondary" onClick={() => setShowForm(false)}>Batal</button>
+              <button className="btn">Buat Order + Invoice</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {detail && (
+        <Modal title={`Order ${detail.nomor_order}`} onClose={() => setDetail(null)}>
+          <p><b>{detail.nama_toko}</b> · {detail.kontak_wa}<br /><span className="muted">{detail.alamat_lengkap}</span></p>
+          <p>Status: <Badge value={detail.status} /> · Invoice: {detail.invoice?.nomor_invoice} (<Badge value={detail.invoice?.status_pembayaran || 'belum'} />)</p>
+          <table>
+            <thead><tr><th>Barang</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead>
+            <tbody>
+              {detail.items.map((it: any) => <tr key={it.id}><td>{it.nama_barang}</td><td>{it.jumlah} {it.unit}</td><td>{rupiah(it.harga_satuan)}</td><td>{rupiah(it.subtotal)}</td></tr>)}
+            </tbody>
+          </table>
+          <p className="right"><b>Total: {rupiah(detail.total_harga)}</b></p>
+          {isAdmin && detail.status === 'draft' && (
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="btn danger" onClick={() => cancelOrder(detail.id)}>Batalkan</button>
+              <button className="btn" onClick={() => confirmOrder(detail.id)}>Konfirmasi (kurangi stok)</button>
+            </div>
+          )}
+        </Modal>
+      )}
+    </div>
+  );
+}
