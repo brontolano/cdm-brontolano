@@ -66,6 +66,7 @@ const barangSchema = z.object({
   harga_s2: tier,
   harga_s3: tier,
   harga_s4: tier,
+  batas_het: tier,
 });
 
 // GET /inventory — list barang
@@ -143,12 +144,12 @@ router.post(
     const r = await query(
       `INSERT INTO barang
         (nama_barang, kategori, hpp, harga_jual, stok_saat_ini, stok_minimum, unit, gambar,
-         sku, ukuran, type_kemasan, isi_karton, isi_pcs, harga_het, harga_s1, harga_s2, harga_s3, harga_s4)
+         sku, ukuran, type_kemasan, isi_karton, isi_pcs, harga_het, harga_s1, harga_s2, harga_s3, harga_s4, batas_het)
        VALUES ($1,$2,$3,$4,COALESCE($5,0),COALESCE($6,5),COALESCE($7,'pcs'),$8,
-               $9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
+               $9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *`,
       [d.nama_barang, d.kategori ?? null, d.hpp, d.harga_jual, d.stok_saat_ini ?? null, d.stok_minimum ?? null, d.unit ?? null, d.gambar ?? null,
        d.sku ?? null, d.ukuran ?? null, d.type_kemasan ?? null, d.isi_karton ?? null, d.isi_pcs ?? null,
-       d.harga_het ?? d.harga_jual ?? null, d.harga_s1 ?? null, d.harga_s2 ?? null, d.harga_s3 ?? null, d.harga_s4 ?? null]
+       d.harga_het ?? d.harga_jual ?? null, d.harga_s1 ?? null, d.harga_s2 ?? null, d.harga_s3 ?? null, d.harga_s4 ?? null, d.batas_het ?? null]
     );
     created(res, r.rows[0]);
   })

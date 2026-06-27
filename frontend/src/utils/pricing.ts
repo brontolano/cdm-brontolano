@@ -44,7 +44,7 @@ export function tierInfo(qty: number): { key: string; range: string } {
 const rpFmt = (v: number) => 'Rp' + Math.round(v).toLocaleString('id-ID');
 
 /** Deteksi anomali harga strata (mode peringatan). Kosong = wajar. */
-export function detectTierAnomalies(b: Tiers & { hpp?: number | string | null }): string[] {
+export function detectTierAnomalies(b: Tiers & { hpp?: number | string | null; batas_het?: number | string | null }): string[] {
   const issues: string[] = [];
   const tiers = [
     { label: 'HET', v: n(b.harga_het) }, { label: 'S1', v: n(b.harga_s1) }, { label: 'S2', v: n(b.harga_s2) },
@@ -60,6 +60,9 @@ export function detectTierAnomalies(b: Tiers & { hpp?: number | string | null })
   const hpp = n(b.hpp);
   if (hpp && hpp > 0) for (const t of tiers) if (t.v < hpp)
     issues.push(`${t.label} (${rpFmt(t.v)}) di bawah HPP — jual rugi`);
+  const batas = n(b.batas_het);
+  if (batas && batas > 0) for (const t of tiers) if (t.v > batas)
+    issues.push(`${t.label} (${rpFmt(t.v)}) di atas batas HET (${rpFmt(batas)}) — komoditas diatur`);
   return issues;
 }
 
@@ -77,10 +80,11 @@ export interface GeneratedTiers {
  * Hasil dibulatkan ke `round` terdekat (default 100) agar harga rapi.
  * Default 15% → 10% sesuai riset margin grosir sembako (10–25%) & spread Brontolano (~4,3%).
  */
-export function tiersFromHpp(hpp: number, marginHet = 15, marginFloor = 10, round = 100): GeneratedTiers {
+export function tiersFromHpp(hpp: number, marginHet = 15, marginFloor = 10, round = 100, batasHet?: number | null): GeneratedTiers {
   const margins = [0, 1, 2, 3, 4].map((i) => marginHet + ((marginFloor - marginHet) * i) / 4);
   const price = (m: number) => {
-    const raw = hpp * (1 + m / 100);
+    let raw = hpp * (1 + m / 100);
+    if (batasHet && batasHet > 0) raw = Math.min(raw, batasHet); // hormati batas HET pemerintah
     return round > 0 ? Math.round(raw / round) * round : Math.round(raw);
   };
   return {

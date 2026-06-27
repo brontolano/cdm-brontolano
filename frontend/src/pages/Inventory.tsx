@@ -26,11 +26,13 @@ interface Barang {
   harga_s2: string | null;
   harga_s3: string | null;
   harga_s4: string | null;
+  batas_het: string | null;
 }
 const empty = {
   nama_barang: '', kategori: '', hpp: 0, harga_jual: 0, stok_saat_ini: 0, stok_minimum: 5, unit: 'pcs', gambar: null as string | null,
   sku: '', ukuran: '', type_kemasan: '', isi_karton: null as number | null, isi_pcs: null as number | null,
   harga_het: null as number | null, harga_s1: null as number | null, harga_s2: null as number | null, harga_s3: null as number | null, harga_s4: null as number | null,
+  batas_het: null as number | null,
 };
 
 export default function Inventory() {
@@ -101,9 +103,10 @@ export default function Inventory() {
     const hpp = Number(form.hpp);
     if (!hpp || hpp <= 0) { notify('error', 'Isi HPP dulu (lebih dari 0)'); return; }
     if (marginFloor > marginHet) { notify('error', 'Margin terendah tidak boleh lebih besar dari margin HET'); return; }
-    const t = tiersFromHpp(hpp, marginHet, marginFloor);
+    const batas = form.batas_het ? Number(form.batas_het) : null;
+    const t = tiersFromHpp(hpp, marginHet, marginFloor, 100, batas);
     setForm((f: any) => ({ ...f, ...t }));
-    notify('success', `5 tier dihitung dari HPP ${rupiah(hpp)} (margin ${marginHet}%→${marginFloor}%)`);
+    notify('success', `5 tier dihitung dari HPP ${rupiah(hpp)} (margin ${marginHet}%→${marginFloor}%${batas ? `, dibatasi HET ${rupiah(batas)}` : ''})`);
   }
 
   async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -121,7 +124,7 @@ export default function Inventory() {
     e.preventDefault();
     // Anti-anomali: peringatkan jika harga janggal, tapi tetap boleh lanjut
     const anomalies = detectTierAnomalies({
-      hpp: Number(form.hpp), harga_het: form.harga_het, harga_s1: form.harga_s1,
+      hpp: Number(form.hpp), batas_het: form.batas_het, harga_het: form.harga_het, harga_s1: form.harga_s1,
       harga_s2: form.harga_s2, harga_s3: form.harga_s3, harga_s4: form.harga_s4,
     });
     if (anomalies.length && !confirm('⚠️ Ada kemungkinan harga janggal:\n\n• ' + anomalies.join('\n• ') + '\n\nTetap simpan?')) return;
@@ -201,6 +204,7 @@ export default function Inventory() {
                   <td>{b.kategori || '-'}</td>
                   <td style={{ fontSize: 13 }}>
                     {b.harga_het ? <>{rupiah(b.harga_het)} <span className="muted">→ {rupiah(b.harga_s4 || b.harga_het)}</span></> : rupiah(b.harga_jual)}
+                    {b.batas_het && <span title={`Batas HET ${rupiah(b.batas_het)}`} style={{ marginLeft: 6, fontSize: 11, color: '#b45309' }}>🔒 HET</span>}
                   </td>
                   <td><b>{b.stok_saat_ini}</b> {b.unit}{b.stok_saat_ini < b.stok_minimum && <span className="muted"> ⚠️</span>}</td>
                   <td>{b.stok_minimum}</td>
@@ -248,7 +252,11 @@ export default function Inventory() {
                 </div>
                 <button type="button" className="btn small" onClick={autoTiers}>Hitung 5 tier</button>
               </div>
-              <small className="muted">Margin grosir pasar 10–25%. Default 15%→10% (HET termahal, S4 partai besar termurah).</small>
+              <div className="field" style={{ marginBottom: 0, marginTop: 8, maxWidth: 220 }}>
+                <label style={{ fontWeight: 400 }}>Batas HET pemerintah (opsional)</label>
+                <input type="number" value={form.batas_het ?? ''} onChange={(e) => setForm({ ...form, batas_het: e.target.value === '' ? null : Number(e.target.value) })} placeholder="mis. 15700 utk MinyaKita" />
+              </div>
+              <small className="muted">Margin grosir pasar 10–25%. Untuk komoditas diatur (MinyaKita), isi batas HET — harga tidak akan melampauinya.</small>
             </div>
             <label style={{ fontSize: 13, fontWeight: 600 }}>Harga grosir berjenjang (per qty)</label>
             <div className="row" style={{ gap: 6 }}>

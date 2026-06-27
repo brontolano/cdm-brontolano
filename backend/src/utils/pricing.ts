@@ -43,7 +43,7 @@ const rp = (v: number) => 'Rp' + Math.round(v).toLocaleString('id-ID');
  * Aturan: strata harus menurun (qty banyak = murah), tak ada lonjakan tak wajar (>2x HET),
  * dan tak ada harga di bawah HPP (jual rugi).
  */
-export function detectTierAnomalies(b: TierPrices & { hpp?: number | string | null }): string[] {
+export function detectTierAnomalies(b: TierPrices & { hpp?: number | string | null; batas_het?: number | string | null }): string[] {
   const issues: string[] = [];
   const tiers = [
     { label: 'HET', v: num(b.harga_het) },
@@ -73,6 +73,13 @@ export function detectTierAnomalies(b: TierPrices & { hpp?: number | string | nu
   if (hpp && hpp > 0) {
     for (const t of tiers) {
       if (t.v < hpp) issues.push(`${t.label} (${rp(t.v)}) di bawah HPP (${rp(hpp)}) — jual rugi`);
+    }
+  }
+  // 4) Melebihi batas HET pemerintah (komoditas diatur, mis. MinyaKita)
+  const batas = num(b.batas_het);
+  if (batas && batas > 0) {
+    for (const t of tiers) {
+      if (t.v > batas) issues.push(`${t.label} (${rp(t.v)}) di atas batas HET (${rp(batas)}) — komoditas diatur pemerintah`);
     }
   }
   return issues;
