@@ -116,6 +116,16 @@ saat dipindah online tidak perlu rebuild konfigurasi API.
 
 > Mode lokal tanpa Docker (Node + PostgreSQL host) tetap tersedia — lihat bagian **Setup** di atas.
 
+### 💾 Backup & Restore Database
+**Otomatis:** container `backup` (sidecar) mem-backup DB ke `./backups/` tiap hari (atur via `BACKUP_INTERVAL` detik & `BACKUP_KEEP` jumlah retensi di `.env`). Aktif otomatis saat `docker compose up -d`.
+
+**Manual:**
+```bash
+sh scripts/backup.sh                       # buat backup sekarang (./backups/cdm_*.sql.gz)
+sh scripts/restore.sh backups/cdm_XXXX.sql.gz   # restore (akan minta konfirmasi 'YA')
+```
+File backup `.sql.gz` di-gitignore (tidak ikut ke repo). Untuk produksi, salin folder `backups/` ke storage eksternal secara berkala.
+
 ## Catatan
 - Skema enum & RBAC mengikuti `01-Backend-Breakdown.md` & `ARCHITECTURE-CHECKLIST.md`.
 - Token: access 15m, refresh 7d; frontend auto-refresh saat 401.
