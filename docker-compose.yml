@@ -49,5 +49,17 @@ services:
     ports:
       - "${APP_PORT:-8080}:80"
 
+  # Katalog konsumen — image sama, tapi root diarahkan ke /katalog (port terpisah).
+  katalog:
+    build: ./frontend
+    container_name: cdm-katalog
+    restart: unless-stopped
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/nginx-katalog.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${KATALOG_PORT:-8090}:80"
+
 volumes:
   cdm_pgdata:
