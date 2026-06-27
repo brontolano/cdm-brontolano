@@ -153,6 +153,15 @@ export default function KonsumenPage() {
               <div className="field"><label>Kota</label><input value={form.kota || ''} onChange={(e) => setForm({ ...form, kota: e.target.value })} /></div>
             </div>
             <div className="field"><label>Alamat Lengkap (min 5 karakter)</label><textarea value={form.alamat_lengkap} onChange={(e) => setForm({ ...form, alamat_lengkap: e.target.value })} required /></div>
+            {(form.foto_toko || form.foto_ktp) && (
+              <div className="field">
+                <label>Foto (dari staff lapangan)</label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {form.foto_toko && <a href={form.foto_toko} target="_blank" rel="noreferrer"><img src={form.foto_toko} alt="Toko" title="Foto Toko" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} /></a>}
+                  {form.foto_ktp && <a href={form.foto_ktp} target="_blank" rel="noreferrer"><img src={form.foto_ktp} alt="KTP" title="Foto KTP" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} /></a>}
+                </div>
+              </div>
+            )}
             <div className="field">
               <label>Lokasi GPS (opsional)</label>
               <div className="row" style={{ marginBottom: 8 }}>

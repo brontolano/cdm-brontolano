@@ -26,6 +26,8 @@ const konsumenSchema = z.object({
   longitude: z.preprocess(emptyToNull, z.coerce.number().min(-180).max(180).nullable().optional()),
   kota: z.string().optional(),
   status: z.enum(['aktif', 'tidak_aktif']).optional(),
+  foto_toko: z.string().nullable().optional(),
+  foto_ktp: z.string().nullable().optional(),
 });
 
 // GET /konsumen — list with search, filter, pagination
@@ -75,9 +77,9 @@ router.post(
     const dup = await query('SELECT id FROM konsumen WHERE kontak_wa=$1', [d.kontak_wa]);
     if (dup.rowCount) throw errors.conflict('Nomor WA sudah terdaftar');
     const r = await query(
-      `INSERT INTO konsumen (nama_toko, nama_pemilik, kontak_wa, alamat_lengkap, latitude, longitude, kota, status, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,COALESCE($8,'aktif'),$9) RETURNING *`,
-      [d.nama_toko, d.nama_pemilik, d.kontak_wa, d.alamat_lengkap, d.latitude ?? null, d.longitude ?? null, d.kota ?? null, d.status ?? null, req.user!.id]
+      `INSERT INTO konsumen (nama_toko, nama_pemilik, kontak_wa, alamat_lengkap, latitude, longitude, kota, status, foto_toko, foto_ktp, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,COALESCE($8,'aktif'),$9,$10,$11) RETURNING *`,
+      [d.nama_toko, d.nama_pemilik, d.kontak_wa, d.alamat_lengkap, d.latitude ?? null, d.longitude ?? null, d.kota ?? null, d.status ?? null, d.foto_toko ?? null, d.foto_ktp ?? null, req.user!.id]
     );
     created(res, r.rows[0]);
   })
