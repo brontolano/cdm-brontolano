@@ -3,10 +3,37 @@ import { z } from 'zod';
 import { query, withTransaction } from '../../db/pool';
 import { asyncHandler, ok, created, errors, parsePagination } from '../../utils/http';
 import { authenticate, rbac } from '../../middleware/auth';
+import { parseRupiah } from '../../utils/pricing';
 
 const router = Router();
 router.use(authenticate);
 
+const DEFAULT_SHEET_CSV =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ51Ksal92REpUDTH96kcFcN2cwgJXHlFRFu8z0cBbiuHoOHZLkb9uE_RgplxVPtCdIQoUD0on5Z7om/pub?output=csv';
+
+/** Parser CSV minimal yang menghormati tanda kutip. */
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c === '\r') { /* skip */ }
+    else field += c;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+const tier = z.number().nonnegative().nullable().optional();
 const barangSchema = z.object({
   nama_barang: z.string().min(1),
   kategori: z.string().optional(),
@@ -16,6 +43,17 @@ const barangSchema = z.object({
   stok_minimum: z.number().int().nonnegative().optional(),
   unit: z.string().optional(),
   gambar: z.string().nullable().optional(),
+  // Model grosir Brontolano
+  sku: z.string().nullable().optional(),
+  ukuran: z.string().nullable().optional(),
+  type_kemasan: z.string().nullable().optional(),
+  isi_karton: z.number().int().nonnegative().nullable().optional(),
+  isi_pcs: z.number().int().nonnegative().nullable().optional(),
+  harga_het: tier,
+  harga_s1: tier,
+  harga_s2: tier,
+  harga_s3: tier,
+  harga_s4: tier,
 });
 
 // GET /inventory — list barang
@@ -58,9 +96,14 @@ router.post(
     const d = barangSchema.parse(req.body);
     if (d.harga_jual < d.hpp) throw errors.unprocessable('Harga jual harus >= HPP (margin negatif)');
     const r = await query(
-      `INSERT INTO barang (nama_barang, kategori, hpp, harga_jual, stok_saat_ini, stok_minimum, unit, gambar)
-       VALUES ($1,$2,$3,$4,COALESCE($5,0),COALESCE($6,5),COALESCE($7,'pcs'),$8) RETURNING *`,
-      [d.nama_barang, d.kategori ?? null, d.hpp, d.harga_jual, d.stok_saat_ini ?? null, d.stok_minimum ?? null, d.unit ?? null, d.gambar ?? null]
+      `INSERT INTO barang
+        (nama_barang, kategori, hpp, harga_jual, stok_saat_ini, stok_minimum, unit, gambar,
+         sku, ukuran, type_kemasan, isi_karton, isi_pcs, harga_het, harga_s1, harga_s2, harga_s3, harga_s4)
+       VALUES ($1,$2,$3,$4,COALESCE($5,0),COALESCE($6,5),COALESCE($7,'pcs'),$8,
+               $9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
+      [d.nama_barang, d.kategori ?? null, d.hpp, d.harga_jual, d.stok_saat_ini ?? null, d.stok_minimum ?? null, d.unit ?? null, d.gambar ?? null,
+       d.sku ?? null, d.ukuran ?? null, d.type_kemasan ?? null, d.isi_karton ?? null, d.isi_pcs ?? null,
+       d.harga_het ?? d.harga_jual ?? null, d.harga_s1 ?? null, d.harga_s2 ?? null, d.harga_s3 ?? null, d.harga_s4 ?? null]
     );
     created(res, r.rows[0]);
   })
@@ -147,6 +190,81 @@ router.get(
       [req.params.id]
     );
     ok(res, r.rows);
+  })
+);
+
+// POST /inventory/import-sheet — impor produk dari Google Sheet Brontolano (admin)
+router.post(
+  '/import-sheet',
+  rbac('admin'),
+  asyncHandler(async (req, res) => {
+    const url = (req.body?.url as string) || DEFAULT_SHEET_CSV;
+    let csv: string;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      csv = await resp.text();
+    } catch (e: any) {
+      throw errors.badRequest(`Gagal mengambil Google Sheet: ${e.message}. Pastikan sheet di-publish ke web (CSV).`);
+    }
+    if (csv.trim().startsWith('<')) throw errors.badRequest('Sheet belum di-publish publik (mendapat HTML, bukan CSV).');
+
+    const rows = parseCsv(csv);
+    if (rows.length < 2) throw errors.badRequest('Sheet kosong / format tidak sesuai.');
+
+    // header: URL Image, SKU, Kategori, Nama Barang, Ukuran, Type, Karton, Pcs, Stock, HET, S1, S2, S3, S4
+    let imported = 0;
+    let skipped = 0;
+    const result = await withTransaction(async (client) => {
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        const nama = (r[3] || '').trim();
+        if (!nama) { skipped++; continue; }
+        const sku = (r[1] || '').trim() || null;
+        const data = {
+          gambar: (r[0] || '').trim() || null,
+          sku,
+          kategori: (r[2] || '').trim() || null,
+          nama_barang: nama,
+          ukuran: (r[4] || '').trim() || null,
+          type_kemasan: (r[5] || '').trim() || null,
+          isi_karton: parseInt(r[6]) || null,
+          isi_pcs: parseInt(r[7]) || null,
+          stok: parseInt(r[8]) || 0,
+          het: parseRupiah(r[9]),
+          s1: parseRupiah(r[10]),
+          s2: parseRupiah(r[11]),
+          s3: parseRupiah(r[12]),
+          s4: parseRupiah(r[13]),
+        };
+        const hargaJual = data.het ?? data.s1 ?? data.s2 ?? 0;
+        // Upsert: berdasar SKU jika ada, jika tidak berdasar nama_barang.
+        const existing = await client.query(
+          sku ? 'SELECT id FROM barang WHERE sku=$1' : 'SELECT id FROM barang WHERE nama_barang=$1',
+          [sku || nama]
+        );
+        if (existing.rowCount) {
+          await client.query(
+            `UPDATE barang SET nama_barang=$2, kategori=$3, gambar=$4, ukuran=$5, type_kemasan=$6,
+               isi_karton=$7, isi_pcs=$8, stok_saat_ini=$9, harga_het=$10, harga_s1=$11, harga_s2=$12,
+               harga_s3=$13, harga_s4=$14, harga_jual=$15, sku=COALESCE($16,sku), updated_at=now() WHERE id=$1`,
+            [existing.rows[0].id, nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan,
+             data.isi_karton, data.isi_pcs, data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, sku]
+          );
+        } else {
+          await client.query(
+            `INSERT INTO barang (nama_barang, kategori, gambar, ukuran, type_kemasan, isi_karton, isi_pcs,
+               stok_saat_ini, harga_het, harga_s1, harga_s2, harga_s3, harga_s4, harga_jual, hpp, unit, sku)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,0,COALESCE($15,'pcs'),$16)`,
+            [nama, data.kategori, data.gambar, data.ukuran, data.type_kemasan, data.isi_karton, data.isi_pcs,
+             data.stok, data.het, data.s1, data.s2, data.s3, data.s4, hargaJual, data.ukuran, sku]
+          );
+        }
+        imported++;
+      }
+      return { imported, skipped };
+    });
+    ok(res, { ...result, total_baris: rows.length - 1 });
   })
 );
 

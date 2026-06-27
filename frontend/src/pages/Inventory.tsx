@@ -15,8 +15,22 @@ interface Barang {
   stok_minimum: number;
   unit: string;
   gambar: string | null;
+  sku: string | null;
+  ukuran: string | null;
+  type_kemasan: string | null;
+  isi_karton: number | null;
+  isi_pcs: number | null;
+  harga_het: string | null;
+  harga_s1: string | null;
+  harga_s2: string | null;
+  harga_s3: string | null;
+  harga_s4: string | null;
 }
-const empty = { nama_barang: '', kategori: '', hpp: 0, harga_jual: 0, stok_saat_ini: 0, stok_minimum: 5, unit: 'pcs', gambar: null as string | null };
+const empty = {
+  nama_barang: '', kategori: '', hpp: 0, harga_jual: 0, stok_saat_ini: 0, stok_minimum: 5, unit: 'pcs', gambar: null as string | null,
+  sku: '', ukuran: '', type_kemasan: '', isi_karton: null as number | null, isi_pcs: null as number | null,
+  harga_het: null as number | null, harga_s1: null as number | null, harga_s2: null as number | null, harga_s3: null as number | null, harga_s4: null as number | null,
+};
 
 export default function Inventory() {
   const { user } = useAuth();
@@ -41,6 +55,18 @@ export default function Inventory() {
   }
   useEffect(() => { load(); }, []);
 
+  const [importing, setImporting] = useState(false);
+  async function importSheet() {
+    if (!confirm('Impor / sinkron produk dari Google Sheet Brontolano?')) return;
+    setImporting(true);
+    try {
+      const r = await api.post('/inventory/import-sheet', {});
+      notify('success', `Impor selesai: ${r.data.data.imported} produk, ${r.data.data.skipped} dilewati`);
+      load();
+    } catch (err) { notify('error', apiError(err)); }
+    finally { setImporting(false); }
+  }
+
   async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -55,7 +81,18 @@ export default function Inventory() {
   async function saveBarang(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const payload = { ...form, hpp: Number(form.hpp), harga_jual: Number(form.harga_jual), stok_saat_ini: Number(form.stok_saat_ini), stok_minimum: Number(form.stok_minimum) };
+      // harga_jual mengikuti tier terendah (HET) bila diisi, agar konsisten.
+      const hargaJual = form.harga_het != null ? Number(form.harga_het) : Number(form.harga_jual);
+      const payload = {
+        ...form,
+        hpp: Number(form.hpp),
+        harga_jual: hargaJual,
+        stok_saat_ini: Number(form.stok_saat_ini),
+        stok_minimum: Number(form.stok_minimum),
+        sku: form.sku?.trim() || null,
+        ukuran: form.ukuran?.trim() || null,
+        type_kemasan: form.type_kemasan?.trim() || null,
+      };
       if (editId) await api.put(`/inventory/${editId}`, payload);
       else await api.post('/inventory', payload);
       notify('success', 'Barang disimpan');
@@ -93,21 +130,26 @@ export default function Inventory() {
     <div>
       <div className="toolbar">
         <h2>Inventory</h2>
-        {isAdmin && <button className="btn" onClick={() => { setForm(empty); setEditId(null); setShowForm(true); }}>+ Barang</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          {isAdmin && <button className="btn secondary" onClick={importSheet} disabled={importing}>{importing ? 'Mengimpor…' : '⬇️ Impor Google Sheet'}</button>}
+          {isAdmin && <button className="btn" onClick={() => { setForm(empty); setEditId(null); setShowForm(true); }}>+ Barang</button>}
+        </div>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
         {loading ? <Spinner /> : list.length === 0 ? <EmptyState message="Belum ada barang." /> : (
           <table>
-            <thead><tr><th>Foto</th><th>Barang</th><th>Kategori</th><th>HPP</th><th>Harga Jual</th><th>Stok</th><th>Min</th><th></th></tr></thead>
+            <thead><tr><th>Foto</th><th>SKU</th><th>Barang</th><th>Kategori</th><th>Harga grosir (HET→S4)</th><th>Stok</th><th>Min</th><th></th></tr></thead>
             <tbody>
               {list.map((b) => (
                 <tr key={b.id} style={b.stok_saat_ini < b.stok_minimum ? { background: '#fef2f2' } : {}}>
-                  <td>{b.gambar ? <img src={b.gambar} alt={b.nama_barang} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} /> : <span className="muted">—</span>}</td>
-                  <td>{b.nama_barang}</td>
+                  <td>{b.gambar ? <img src={b.gambar} alt={b.nama_barang} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} /> : <span className="muted">—</span>}</td>
+                  <td className="muted">{b.sku || '-'}</td>
+                  <td>{b.nama_barang}{b.ukuran ? <span className="muted"> · {b.ukuran}</span> : ''}</td>
                   <td>{b.kategori || '-'}</td>
-                  <td>{rupiah(b.hpp)}</td>
-                  <td>{rupiah(b.harga_jual)}</td>
+                  <td style={{ fontSize: 13 }}>
+                    {b.harga_het ? <>{rupiah(b.harga_het)} <span className="muted">→ {rupiah(b.harga_s4 || b.harga_het)}</span></> : rupiah(b.harga_jual)}
+                  </td>
                   <td><b>{b.stok_saat_ini}</b> {b.unit}{b.stok_saat_ini < b.stok_minimum && <span className="muted"> ⚠️</span>}</td>
                   <td>{b.stok_minimum}</td>
                   <td className="right">
@@ -132,9 +174,24 @@ export default function Inventory() {
               <div className="field"><label>Unit</label><input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
             </div>
             <div className="row">
-              <div className="field"><label>HPP</label><input type="number" value={form.hpp} onChange={(e) => setForm({ ...form, hpp: e.target.value })} required /></div>
-              <div className="field"><label>Harga Jual</label><input type="number" value={form.harga_jual} onChange={(e) => setForm({ ...form, harga_jual: e.target.value })} required /></div>
+              <div className="field"><label>SKU</label><input value={form.sku || ''} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder="MKG-0001" /></div>
+              <div className="field"><label>Ukuran</label><input value={form.ukuran || ''} onChange={(e) => setForm({ ...form, ukuran: e.target.value })} placeholder="Karton/Dus" /></div>
+              <div className="field"><label>Type kemasan</label><input value={form.type_kemasan || ''} onChange={(e) => setForm({ ...form, type_kemasan: e.target.value })} placeholder="Botol/Pouch" /></div>
             </div>
+            <div className="row">
+              <div className="field"><label>Isi / Karton</label><input type="number" value={form.isi_karton ?? ''} onChange={(e) => setForm({ ...form, isi_karton: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label>Isi Pcs</label><input type="number" value={form.isi_pcs ?? ''} onChange={(e) => setForm({ ...form, isi_pcs: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label>HPP</label><input type="number" value={form.hpp} onChange={(e) => setForm({ ...form, hpp: e.target.value })} required /></div>
+            </div>
+            <label style={{ fontSize: 13, fontWeight: 600 }}>Harga grosir berjenjang (per qty)</label>
+            <div className="row" style={{ gap: 6 }}>
+              <div className="field"><label style={{ fontWeight: 400 }}>HET 1-5</label><input type="number" value={form.harga_het ?? ''} onChange={(e) => setForm({ ...form, harga_het: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label style={{ fontWeight: 400 }}>S1 6-9</label><input type="number" value={form.harga_s1 ?? ''} onChange={(e) => setForm({ ...form, harga_s1: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label style={{ fontWeight: 400 }}>S2 10-24</label><input type="number" value={form.harga_s2 ?? ''} onChange={(e) => setForm({ ...form, harga_s2: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label style={{ fontWeight: 400 }}>S3 25-150</label><input type="number" value={form.harga_s3 ?? ''} onChange={(e) => setForm({ ...form, harga_s3: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label style={{ fontWeight: 400 }}>S4 &gt;150</label><input type="number" value={form.harga_s4 ?? ''} onChange={(e) => setForm({ ...form, harga_s4: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+            </div>
+            <input type="hidden" value={form.harga_jual} />
             <div className="row">
               <div className="field"><label>Stok Awal</label><input type="number" value={form.stok_saat_ini} onChange={(e) => setForm({ ...form, stok_saat_ini: e.target.value })} disabled={!!editId} /></div>
               <div className="field"><label>Stok Minimum</label><input type="number" value={form.stok_minimum} onChange={(e) => setForm({ ...form, stok_minimum: e.target.value })} /></div>
