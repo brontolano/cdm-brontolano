@@ -265,12 +265,12 @@ export default function Katalog() {
               const saving = Math.max(0, base - harga);
               const floor = priceForQty(p, 200); // harga termurah (tier S4)
               return (
-                <ProductCard key={p.id} name={p.nama_barang} sku={p.sku || ''} size={p.ukuran || ''}
+                <ProductCard key={p.id} name={p.nama_barang} sku={p.sku || ''} size=""
                   category={p.kategori || ''} image={p.gambar}
                   price={harga} wasPrice={saving > 0 ? base : null} saving={saving > 0 ? saving : 0}
                   hotTier={saving > 0 ? tierInfo(qd).key : null}
                   perPcs={hargaPcs(p, harga)} isi={pcsPerKarton(p)} lowestPrice={floor}
-                  priceUnit={p.type_kemasan || 'karton'} pcsUnit="pcs"
+                  priceUnit={p.ukuran || 'unit'} pcsUnit={p.type_kemasan || 'pcs'}
                   qty={qty} onQty={(q) => setQty(p.id, q)} />
               );
             })}
@@ -311,7 +311,7 @@ export default function Katalog() {
                   <div className="cat__cartrow" key={i.p.id}>
                     <div className="cat__cartinfo">
                       <div className="cat__cartname">{i.p.nama_barang}</div>
-                      <div className="cat__carttier">{rupiah(i.harga)} /{i.p.type_kemasan || 'karton'} · Tier {tierInfo(i.qty).key}</div>
+                      <div className="cat__carttier">{rupiah(i.harga)} /{i.p.ukuran || 'unit'} · Tier {tierInfo(i.qty).key}</div>
                     </div>
                     <QtyStepper value={i.qty} onChange={(q) => setQty(i.p.id, q)} size="sm" />
                     <div className="cat__cartsub">{rupiah(i.subtotal)}</div>
