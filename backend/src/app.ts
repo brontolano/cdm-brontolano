@@ -5,6 +5,7 @@ import { notFoundHandler, errorHandler } from './middleware/error';
 
 import authRoutes from './modules/auth/auth.routes';
 import catalogRoutes from './modules/catalog/catalog.routes';
+import konsumenAuthRoutes from './modules/konsumenAuth/konsumenAuth.routes';
 import pesananRoutes from './modules/pesanan/pesanan.routes';
 import usersRoutes from './modules/users/users.routes';
 import konsumenRoutes from './modules/konsumen/konsumen.routes';
@@ -23,6 +24,7 @@ export function createApp() {
   app.get('/health', (_req, res) => res.json({ success: true, data: { status: 'ok', time: new Date().toISOString() } }));
 
   app.use('/api/public/catalog', catalogRoutes); // publik, tanpa login
+  app.use('/api/konsumen-auth', konsumenAuthRoutes); // akun konsumen katalog (opsional)
   app.use('/api/auth', authRoutes);
   app.use('/api/konsumen', konsumenRoutes);
   app.use('/api/inventory', inventoryRoutes);
