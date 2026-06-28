@@ -6,6 +6,7 @@ import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState } from '../components/ui';
 import { MapView } from '../components/MapView';
 import { gmapsDir } from '../utils/maps';
+import { fileToCompressedDataUrl } from '../utils/image';
 
 interface Konsumen {
   id: string;
@@ -82,6 +83,18 @@ export default function KonsumenPage() {
     }
   }
 
+  async function pickFoto(e: React.ChangeEvent<HTMLInputElement>, key: 'foto_toko' | 'foto_ktp') {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file, 800, 0.7);
+      setForm((f: any) => ({ ...f, [key]: dataUrl }));
+    } catch (err: any) {
+      notify('error', err?.message || 'Gagal memproses foto');
+    }
+  }
+
   function useMyLocation() {
     if (!navigator.geolocation) {
       notify('error', 'Browser tidak mendukung geolocation');
@@ -154,15 +167,30 @@ export default function KonsumenPage() {
               <div className="field"><label>Kota</label><input value={form.kota || ''} onChange={(e) => setForm({ ...form, kota: e.target.value })} /></div>
             </div>
             <div className="field"><label>Alamat Lengkap (min 5 karakter)</label><textarea value={form.alamat_lengkap} onChange={(e) => setForm({ ...form, alamat_lengkap: e.target.value })} required /></div>
-            {(form.foto_toko || form.foto_ktp) && (
-              <div className="field">
-                <label>Foto (dari staff lapangan)</label>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  {form.foto_toko && <a href={form.foto_toko} target="_blank" rel="noreferrer"><img src={form.foto_toko} alt="Toko" title="Foto Toko" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} /></a>}
-                  {form.foto_ktp && <a href={form.foto_ktp} target="_blank" rel="noreferrer"><img src={form.foto_ktp} alt="KTP" title="Foto KTP" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} /></a>}
-                </div>
-              </div>
-            )}
+            <div className="row">
+              {(['foto_toko', 'foto_ktp'] as const).map((key) => {
+                const labelText = key === 'foto_toko' ? 'Foto Toko' : 'Foto KTP';
+                return (
+                  <div className="field" key={key}>
+                    <label>{labelText} (opsional)</label>
+                    {form[key] ? (
+                      <div style={{ position: 'relative', width: 110 }}>
+                        <a href={form[key]} target="_blank" rel="noreferrer">
+                          <img src={form[key]} alt={labelText} style={{ width: 110, height: 110, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border)' }} />
+                        </a>
+                        <button type="button" aria-label={`Hapus ${labelText}`} onClick={() => setForm((f: any) => ({ ...f, [key]: null }))}
+                          style={{ position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'var(--danger)', color: '#fff', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                      </div>
+                    ) : (
+                      <label className="btn secondary small" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                        📷 Pilih / Foto
+                        <input type="file" accept="image/*" capture="environment" hidden onChange={(e) => pickFoto(e, key)} />
+                      </label>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
             <div className="field">
               <label>Lokasi GPS (opsional)</label>
               <div className="row" style={{ marginBottom: 8 }}>
