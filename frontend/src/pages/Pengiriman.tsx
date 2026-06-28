@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
@@ -50,7 +51,7 @@ export default function Pengiriman() {
     <div>
       <div className="toolbar">
         <h2>Pengiriman &amp; Rute</h2>
-        {isAdmin && <button className="btn" onClick={openForm}>+ Buat Rute</button>}
+        {isAdmin && <button className="btn" onClick={openForm}><Plus size={16} aria-hidden /> Buat Rute</button>}
       </div>
 
       <div className="card" style={{ padding: 0 }}>

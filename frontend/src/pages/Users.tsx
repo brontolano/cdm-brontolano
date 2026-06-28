@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
@@ -50,7 +51,7 @@ export default function Users() {
     <div>
       <div className="toolbar">
         <h2>Manajemen User</h2>
-        <button className="btn" onClick={() => { setForm(empty); setEditId(null); setShowForm(true); }}>+ User</button>
+        <button className="btn" onClick={() => { setForm(empty); setEditId(null); setShowForm(true); }}><Plus size={16} aria-hidden /> User</button>
       </div>
       <div className="card" style={{ padding: 0 }}>
         {loading ? <Spinner /> : list.length === 0 ? <EmptyState message="Belum ada user." /> : (

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
@@ -70,7 +71,7 @@ export default function Orders() {
     <div>
       <div className="toolbar">
         <h2>Orders</h2>
-        {isAdmin && <button className="btn" onClick={openForm}>+ Buat Order</button>}
+        {isAdmin && <button className="btn" onClick={openForm}><Plus size={16} aria-hidden /> Buat Order</button>}
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -127,7 +128,7 @@ export default function Orders() {
                 </div>
               );
             })}
-            <button type="button" className="btn secondary small" onClick={() => setItems([...items, { barang_id: '', jumlah: 1 }])}>+ Tambah barang</button>
+            <button type="button" className="btn secondary small" onClick={() => setItems([...items, { barang_id: '', jumlah: 1 }])}><Plus size={14} aria-hidden /> Tambah barang</button>
             <div className="field" style={{ marginTop: 12 }}><label>Catatan</label><input value={catatan} onChange={(e) => setCatatan(e.target.value)} /></div>
             <p className="right"><b>Total: {rupiah(total)}</b></p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>

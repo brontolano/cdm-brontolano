@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
@@ -109,7 +110,7 @@ export default function KonsumenPage() {
         <h2>Data Konsumen</h2>
         <div style={{ display: 'flex', gap: 10 }}>
           <input placeholder="Cari toko / pemilik / WA…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ padding: 9, borderRadius: 8, border: '1px solid var(--border)' }} />
-          {canEdit && <button className="btn" onClick={openCreate}>+ Konsumen</button>}
+          {canEdit && <button className="btn" onClick={openCreate}><Plus size={16} aria-hidden /> Konsumen</button>}
         </div>
       </div>
 

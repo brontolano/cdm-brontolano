@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
@@ -198,7 +199,7 @@ export default function Inventory() {
               <input type="file" accept=".csv,text/csv" onChange={importCsv} disabled={importing} style={{ display: 'none' }} />
             </label>
           )}
-          {isAdmin && <button className="btn" onClick={() => { setForm(empty); setEditId(null); setShowForm(true); }}>+ Barang</button>}
+          {isAdmin && <button className="btn" onClick={() => { setForm(empty); setEditId(null); setShowForm(true); }}><Plus size={16} aria-hidden /> Barang</button>}
         </div>
       </div>
 
