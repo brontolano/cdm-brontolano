@@ -10,7 +10,7 @@ router.use(authenticate);
 router.get(
   '/summary',
   asyncHandler(async (_req, res) => {
-    const [konsumen, orders, omsetBulan, lowStock, piutang, labaBulan] = await Promise.all([
+    const [konsumen, orders, omsetBulan, lowStock, piutang, labaBulan, pengeluaranBulan] = await Promise.all([
       query<{ count: string }>(`SELECT COUNT(*) FROM konsumen WHERE status='aktif'`),
       query<{ count: string }>(`SELECT COUNT(*) FROM orders WHERE status NOT IN ('dibatalkan')`),
       query<{ sum: string }>(
@@ -26,12 +26,21 @@ router.get(
          WHERE o.status NOT IN ('dibatalkan','draft')
          AND date_trunc('month', o.tanggal_order) = date_trunc('month', CURRENT_DATE)`
       ),
+      // Total pengeluaran bulan ini (catatan biaya operasional)
+      query<{ sum: string }>(
+        `SELECT COALESCE(SUM(jumlah),0) AS sum FROM pengeluaran
+         WHERE date_trunc('month', tanggal) = date_trunc('month', CURRENT_DATE)`
+      ),
     ]);
+    const laba = Number(labaBulan.rows[0].sum);
+    const pengeluaran = Number(pengeluaranBulan.rows[0].sum);
     ok(res, {
       total_konsumen: Number(konsumen.rows[0].count),
       total_orders: Number(orders.rows[0].count),
       omset_bulan_ini: Number(omsetBulan.rows[0].sum),
-      laba_bulan_ini: Number(labaBulan.rows[0].sum),
+      laba_bulan_ini: laba,
+      pengeluaran_bulan_ini: pengeluaran,
+      laba_bersih_bulan_ini: laba - pengeluaran,
       barang_stok_rendah: Number(lowStock.rows[0].count),
       total_piutang: Number(piutang.rows[0].sum),
     });

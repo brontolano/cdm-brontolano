@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Upload, Store, ReceiptText, TrendingUp, HandCoins, Hourglass, Package, type LucideIcon } from 'lucide-react';
+import { Upload, Store, ReceiptText, TrendingUp, HandCoins, Hourglass, Package, Coins, Wallet, type LucideIcon } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
@@ -56,6 +56,8 @@ export default function Dashboard() {
     { label: 'Total Order', value: summary.total_orders, icon: ReceiptText },
     { label: 'Omset Bulan Ini', value: rupiah(summary.omset_bulan_ini), icon: TrendingUp, accent: true },
     { label: 'Laba Kotor Bln Ini', value: rupiah(summary.laba_bulan_ini || 0), icon: HandCoins },
+    { label: 'Pengeluaran Bln Ini', value: <span style={{ color: 'var(--danger)' }}>{rupiah(summary.pengeluaran_bulan_ini || 0)}</span>, icon: Coins },
+    { label: 'Laba Bersih Bln Ini', value: <span style={{ color: (summary.laba_bersih_bulan_ini || 0) >= 0 ? 'var(--green-600)' : 'var(--danger)' }}>{rupiah(summary.laba_bersih_bulan_ini || 0)}</span>, icon: Wallet, accent: true },
     { label: 'Piutang', value: rupiah(summary.total_piutang), icon: Hourglass },
     { label: 'Stok Rendah', value: summary.barang_stok_rendah, icon: Package },
   ];
