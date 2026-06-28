@@ -45,12 +45,18 @@ router.put(
   '/:id',
   asyncHandler(async (req, res) => {
     const d = z
-      .object({ nama_lengkap: z.string().min(1).optional(), role: roleEnum.optional(), status: z.enum(['active', 'inactive']).optional() })
+      .object({ email: z.string().email().optional(), nama_lengkap: z.string().min(1).optional(), role: roleEnum.optional(), status: z.enum(['active', 'inactive']).optional() })
       .parse(req.body);
     const fields = Object.keys(d);
     if (!fields.length) throw errors.badRequest('Tidak ada perubahan');
-    // Cegah admin menonaktifkan dirinya sendiri
+    // Cegah admin menonaktifkan/menurunkan dirinya sendiri
     if (d.status === 'inactive' && req.params.id === req.user!.id) throw errors.badRequest('Tidak bisa menonaktifkan akun sendiri');
+    if (d.role && d.role !== 'admin' && req.params.id === req.user!.id) throw errors.badRequest('Tidak bisa mengubah role akun sendiri');
+    // Email harus unik (selain milik user ini)
+    if (d.email) {
+      const dup = await query('SELECT id FROM users WHERE email=$1 AND id<>$2', [d.email, req.params.id]);
+      if (dup.rowCount) throw errors.conflict('Email sudah dipakai user lain');
+    }
     const sets = fields.map((f, i) => `${f}=$${i + 1}`);
     const params = fields.map((f) => (d as any)[f]);
     params.push(req.params.id);
@@ -61,6 +67,31 @@ router.put(
     );
     if (!r.rowCount) throw errors.notFound('User tidak ditemukan');
     ok(res, r.rows[0]);
+  })
+);
+
+// DELETE /api/users/:id — hapus user (dengan pengaman)
+router.delete(
+  '/:id',
+  asyncHandler(async (req, res) => {
+    if (req.params.id === req.user!.id) throw errors.badRequest('Tidak bisa menghapus akun sendiri');
+    const t = await query<{ id: string; role: string }>('SELECT id, role FROM users WHERE id=$1', [req.params.id]);
+    if (!t.rowCount) throw errors.notFound('User tidak ditemukan');
+    // Jangan biarkan admin terakhir terhapus (cegah terkunci dari sistem)
+    if (t.rows[0].role === 'admin') {
+      const c = await query<{ n: number }>("SELECT count(*)::int AS n FROM users WHERE role='admin'");
+      if (c.rows[0].n <= 1) throw errors.badRequest('Tidak bisa menghapus admin terakhir');
+    }
+    try {
+      await query('DELETE FROM users WHERE id=$1', [req.params.id]);
+    } catch (e: any) {
+      // 23503 = foreign_key_violation → user punya data terkait
+      if (e?.code === '23503') {
+        throw errors.conflict('User memiliki data terkait (konsumen/order/stok). Nonaktifkan saja, jangan dihapus.');
+      }
+      throw e;
+    }
+    ok(res, { message: 'User dihapus' });
   })
 );
 

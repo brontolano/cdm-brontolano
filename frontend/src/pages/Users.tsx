@@ -18,6 +18,8 @@ export default function Users() {
   const [form, setForm] = useState<any>(empty);
   const [pwUser, setPwUser] = useState<any>(null);
   const [pw, setPw] = useState('');
+  const [delUser, setDelUser] = useState<any>(null);
+  const [busy, setBusy] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -29,7 +31,7 @@ export default function Users() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     try {
-      if (editId) await api.put(`/users/${editId}`, { nama_lengkap: form.nama_lengkap, role: form.role });
+      if (editId) await api.put(`/users/${editId}`, { nama_lengkap: form.nama_lengkap, email: form.email, role: form.role });
       else await api.post('/users', form);
       notify('success', editId ? 'User diperbarui' : 'User ditambahkan');
       setShowForm(false); load();
@@ -45,6 +47,13 @@ export default function Users() {
     e.preventDefault();
     try { await api.put(`/users/${pwUser.id}/password`, { password: pw }); notify('success', 'Password direset'); setPwUser(null); setPw(''); }
     catch (err) { notify('error', apiError(err)); }
+  }
+  async function doDelete() {
+    if (!delUser) return;
+    setBusy(true);
+    try { await api.delete(`/users/${delUser.id}`); notify('success', `User ${delUser.nama_lengkap} dihapus`); setDelUser(null); load(); }
+    catch (err) { notify('error', apiError(err)); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -68,6 +77,7 @@ export default function Users() {
                     <button className="btn secondary small" onClick={() => { setForm({ ...u, password: '' }); setEditId(u.id); setShowForm(true); }}>Edit</button>
                     <button className="btn secondary small" style={{ marginLeft: 6 }} onClick={() => setPwUser(u)}>Reset PW</button>
                     {u.id !== user?.id && <button className="btn secondary small" style={{ marginLeft: 6 }} onClick={() => toggleStatus(u)}>{u.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}</button>}
+                    {u.id !== user?.id && <button className="btn danger small" style={{ marginLeft: 6 }} onClick={() => setDelUser(u)}>Hapus</button>}
                   </td>
                 </tr>
               ))}
@@ -80,7 +90,7 @@ export default function Users() {
         <Modal title={editId ? 'Edit User' : 'Tambah User'} onClose={() => setShowForm(false)}>
           <form onSubmit={save}>
             <div className="field"><label>Nama Lengkap</label><input value={form.nama_lengkap} onChange={(e) => setForm({ ...form, nama_lengkap: e.target.value })} required /></div>
-            {!editId && <div className="field"><label>Email</label><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></div>}
+            <div className="field"><label>Email</label><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></div>
             {!editId && <div className="field"><label>Password (min 6)</label><input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required /></div>}
             <div className="field"><label>Role</label>
               <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
@@ -104,6 +114,17 @@ export default function Users() {
               <button className="btn">Reset</button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {delUser && (
+        <Modal title="Hapus User" onClose={() => setDelUser(null)}>
+          <p>Hapus permanen akun <b>{delUser.nama_lengkap}</b> ({delUser.email})? Tindakan ini tidak bisa dibatalkan.</p>
+          <p className="muted" style={{ fontSize: 13 }}>Jika user pernah membuat data (konsumen/order/stok), sistem akan menyarankan menonaktifkan saja demi menjaga riwayat.</p>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
+            <button type="button" className="btn secondary" onClick={() => setDelUser(null)}>Batal</button>
+            <button type="button" className="btn danger" disabled={busy} onClick={doDelete}>{busy ? 'Menghapus…' : 'Hapus'}</button>
+          </div>
         </Modal>
       )}
     </div>
