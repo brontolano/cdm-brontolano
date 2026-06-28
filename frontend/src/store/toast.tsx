@@ -24,8 +24,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="toast-wrap">
         {toasts.map((t) => (
-          <div key={t.id} className={`toast toast-${t.type}`}>
-            {t.message}
+          <div key={t.id} className={`toast toast-${t.type}`} role="status">
+            <span style={{ fontSize: 15 }} aria-hidden>{t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : 'ℹ'}</span>
+            <span>{t.message}</span>
           </div>
         ))}
       </div>
