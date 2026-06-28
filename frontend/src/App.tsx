@@ -1,5 +1,5 @@
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, Inbox, ReceiptText, Banknote, Truck, MessageCircle, Users as UsersIcon, LogOut, Search, Bell, LifeBuoy, Wallet, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Store, Package, Inbox, ReceiptText, Banknote, Truck, MessageCircle, Users as UsersIcon, LogOut, Search, Bell, LifeBuoy, Wallet, Coins, type LucideIcon } from 'lucide-react';
 import { useAuth, Role } from './store/auth';
 import { Spinner } from './components/ui';
 import Login from './pages/Login';
@@ -14,6 +14,7 @@ import Katalog from './pages/Katalog';
 import PesananMasuk from './pages/PesananMasuk';
 import Users from './pages/Users';
 import Payments from './pages/Payments';
+import Pengeluaran from './pages/Pengeluaran';
 import LapanganHome from './pages/lapangan/LapanganHome';
 import LapanganPengiriman from './pages/lapangan/LapanganPengiriman';
 import LapanganKonsumen from './pages/lapangan/LapanganKonsumen';
@@ -40,6 +41,7 @@ const MENU: MenuItem[] = [
   { path: '/pengiriman', label: 'Pengiriman', icon: Truck },
   { path: '/broadcasting', label: 'Broadcast WA', icon: MessageCircle, roles: ['lapangan', 'admin'] },
   { path: '/pembayaran', label: 'Pembayaran', icon: Wallet, roles: ['admin', 'management'] },
+  { path: '/pengeluaran', label: 'Pengeluaran', icon: Coins, roles: ['admin', 'management'] },
   { path: '/users', label: 'Manajemen User', icon: UsersIcon, roles: ['admin'] },
 ];
 
@@ -144,6 +146,7 @@ export default function App() {
       <Route path="/broadcasting" element={<Protected><Broadcasting /></Protected>} />
       <Route path="/users" element={<Protected><Users /></Protected>} />
       <Route path="/pembayaran" element={<Protected><Payments /></Protected>} />
+      <Route path="/pengeluaran" element={<Protected><Pengeluaran /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

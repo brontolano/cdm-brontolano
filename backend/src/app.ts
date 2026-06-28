@@ -7,6 +7,7 @@ import authRoutes from './modules/auth/auth.routes';
 import catalogRoutes from './modules/catalog/catalog.routes';
 import konsumenAuthRoutes from './modules/konsumenAuth/konsumenAuth.routes';
 import paymentsRoutes from './modules/payments/payments.routes';
+import pengeluaranRoutes from './modules/pengeluaran/pengeluaran.routes';
 import pesananRoutes from './modules/pesanan/pesanan.routes';
 import usersRoutes from './modules/users/users.routes';
 import konsumenRoutes from './modules/konsumen/konsumen.routes';
@@ -27,6 +28,7 @@ export function createApp() {
   app.use('/api/public/catalog', catalogRoutes); // publik, tanpa login
   app.use('/api/konsumen-auth', konsumenAuthRoutes); // akun konsumen katalog (opsional)
   app.use('/api/payments', paymentsRoutes);
+  app.use('/api/pengeluaran', pengeluaranRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/konsumen', konsumenRoutes);
   app.use('/api/inventory', inventoryRoutes);
