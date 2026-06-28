@@ -15,8 +15,12 @@
 * { box-sizing: border-box; }
 body { margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 a { color: var(--link); text-decoration: none; }
+/* Headings — Plus Jakarta Sans, tebal, tracking rapat (per guidelines) */
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: var(--tracking-tight); line-height: var(--leading-snug); }
+h1 { font-weight: 800; } h2 { font-weight: 700; } h3 { font-weight: 700; }
 /* Angka & kode (harga, SKU, tier) pakai mono tabular agar kolom rapi */
-.mono, .badge, table td .right, .value { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.badge, .value, .stat .value { font-variant-numeric: tabular-nums; }
 
 /* Layout */
 .app-shell { display: flex; min-height: 100vh; }
@@ -37,12 +41,16 @@ a { color: var(--link); text-decoration: none; }
 .stat .value { font-size: 24px; font-weight: 700; margin-top: 4px; }
 
 /* Buttons */
-.btn { border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer; background: var(--primary); color: #fff; }
+.btn { border: none; border-radius: var(--radius-sm); padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer; background: var(--primary); color: var(--primary-fg, #fff); transition: background var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out); }
 .btn:hover { background: var(--primary-dark); }
-.btn.secondary { background: #e2e8f0; color: var(--text); }
+.btn:active { background: var(--primary-active); }
+.btn.secondary { background: var(--slate-200); color: var(--text); }
+.btn.secondary:hover { background: var(--slate-300); }
 .btn.danger { background: var(--danger); }
+.btn.danger:hover { background: var(--danger-700); }
 .btn.small { padding: 5px 10px; font-size: 13px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn:focus-visible, .field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 
 /* Forms */
 .field { margin-bottom: 12px; }
@@ -56,12 +64,12 @@ a { color: var(--link); text-decoration: none; }
 table { width: 100%; border-collapse: collapse; background: var(--card); }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
 th { background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--muted); letter-spacing: .04em; }
-.badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-.badge.draft { background:#e2e8f0; color:#475569 } .badge.confirmed{background:#dbeafe;color:#1d4ed8}
-.badge.dikirim{background:#fef3c7;color:#b45309} .badge.selesai{background:#dcfce7;color:#15803d}
-.badge.dibatalkan{background:#fee2e2;color:#b91c1c} .badge.proses{background:#ede9fe;color:#6d28d9}
-.badge.lunas{background:#dcfce7;color:#15803d} .badge.belum{background:#fee2e2;color:#b91c1c} .badge.sebagian{background:#fef3c7;color:#b45309}
-.badge.aktif{background:#dcfce7;color:#15803d} .badge.tidak_aktif{background:#fee2e2;color:#b91c1c}
+.badge { padding: 2px 8px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; }
+.badge.draft { background:var(--badge-draft-bg); color:var(--badge-draft-fg) } .badge.confirmed{background:var(--badge-confirmed-bg);color:var(--badge-confirmed-fg)}
+.badge.dikirim{background:var(--badge-dikirim-bg);color:var(--badge-dikirim-fg)} .badge.selesai{background:var(--badge-selesai-bg);color:var(--badge-selesai-fg)}
+.badge.dibatalkan{background:var(--badge-batal-bg);color:var(--badge-batal-fg)} .badge.proses{background:var(--badge-proses-bg);color:var(--badge-proses-fg)}
+.badge.lunas{background:var(--badge-lunas-bg);color:var(--badge-lunas-fg)} .badge.belum{background:var(--badge-belum-bg);color:var(--badge-belum-fg)} .badge.sebagian{background:var(--badge-sebagian-bg);color:var(--badge-sebagian-fg)}
+.badge.aktif{background:var(--badge-aktif-bg);color:var(--badge-aktif-fg)} .badge.tidak_aktif{background:var(--badge-nonaktif-bg);color:var(--badge-nonaktif-fg)}
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
@@ -71,7 +79,7 @@ th { background: #f8fafc; font-size: 12px; text-transform: uppercase; color: var
 /* Toast */
 .toast-wrap { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
 .toast { padding: 12px 18px; border-radius: 8px; color: #fff; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
-.toast-success { background: var(--success); } .toast-error { background: var(--danger); } .toast-info { background: var(--primary); }
+.toast-success { background: var(--success); } .toast-error { background: var(--danger); } .toast-info { background: var(--info-500); }
 
 /* Misc */
 .muted { color: var(--muted); } .right { text-align: right; }
