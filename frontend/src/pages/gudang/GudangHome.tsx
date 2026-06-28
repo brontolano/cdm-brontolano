@@ -12,9 +12,12 @@ export default function GudangHome() {
   return (
     <div style={{ minHeight: '100vh', background: '#f1f5f9', paddingBottom: 24 }}>
       <header style={{ background: '#c2410c', color: '#fff', padding: 16, paddingTop: 'calc(16px + env(safe-area-inset-top))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontSize: 13, opacity: 0.85 }}>Staff Gudang · Brontolano</div>
-          <strong style={{ fontSize: 18 }}>{user?.nama_lengkap}</strong>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="/brontolano-mark.png" alt="" style={{ height: 30, width: 'auto' }} />
+          <div>
+            <div style={{ fontSize: 13, opacity: 0.85 }}>Staff Gudang · Brontolano</div>
+            <strong style={{ fontSize: 18 }}>{user?.nama_lengkap}</strong>
+          </div>
         </div>
         <button onClick={logout} style={{ background: 'rgba(255,255,255,.2)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 12px', fontWeight: 600 }}>Keluar</button>
       </header>

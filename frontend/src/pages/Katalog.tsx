@@ -101,7 +101,7 @@ export default function Katalog() {
       {/* Header */}
       <header style={S.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <img src="https://brontolano.com/logo.png" alt="" style={{ height: 30 }} onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
+          <img src="/brontolano-mark.png" alt="" style={{ height: 30 }} onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
           <strong style={{ fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Katalog Brontolano</strong>
         </div>
         {canInstall && <button onClick={install} style={S.installBtn}>⬇️ Install</button>}
