@@ -141,7 +141,9 @@ export default function Katalog() {
                 const hKarton = priceForQty(p, qd);
                 const hPcs = hargaPcs(p, hKarton);
                 const ti = tierInfo(qd);
-                const hemat = qty > 0 && hKarton < priceForQty(p, 1); // tier diskon aktif
+                const hBase = priceForQty(p, 1); // harga HET (1 karton)
+                const hemat = qty > 0 && hKarton < hBase; // tier diskon aktif
+                const hematRp = hBase - hKarton;
                 return (
                   <div key={p.id} style={S.card}>
                     <div style={S.imgBox}>
@@ -154,7 +156,11 @@ export default function Katalog() {
                     <div style={S.cardBody}>
                       <div style={S.name}>{p.nama_barang}</div>
                       <div style={S.sku}>{p.sku || ''}{p.ukuran ? ` · ${p.ukuran}` : ''}</div>
-                      <div style={S.price}>{rupiah(hKarton)} <span style={S.unit}>/karton</span></div>
+                      <div style={S.price}>
+                        {rupiah(hKarton)} <span style={S.unit}>/karton</span>
+                        {hemat && <span style={S.wasPrice}>{rupiah(hBase)}</span>}
+                      </div>
+                      {hemat && <div style={S.savingTag}>Hemat {rupiah(hematRp)}/karton</div>}
                       {hPcs != null && <div style={S.pcsPrice}>≈ {rupiah(hPcs)} <span style={S.unit}>/pcs</span>{pcsPerKarton(p) ? ` · isi ${pcsPerKarton(p)}` : ''}</div>}
                       {qty === 0
                         ? <button onClick={() => setQty(p.id, 1)} style={S.addBtn}>+ Keranjang</button>
@@ -256,6 +262,8 @@ const S: Record<string, React.CSSProperties> = {
   tierPill: { flex: '0 0 auto', background: 'rgba(255,255,255,.18)', borderRadius: 999, padding: '4px 10px', fontSize: 11.5, whiteSpace: 'nowrap' },
   hematTag: { position: 'absolute', top: 6, right: 6, background: '#dc2626', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 999 },
   unit: { fontSize: 11, fontWeight: 500, color: '#64748b' },
+  wasPrice: { fontSize: 12, fontWeight: 500, color: '#94a3b8', textDecoration: 'line-through', marginLeft: 6, fontFamily: "'JetBrains Mono', ui-monospace, monospace" },
+  savingTag: { display: 'inline-block', alignSelf: 'flex-start', background: '#dcfce7', color: '#15803d', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 },
   pcsPrice: { fontSize: 12, color: '#16a34a', fontWeight: 600 },
   searchWrap: { position: 'sticky', top: 54, zIndex: 20, background: '#f1f5f9', padding: '10px 14px 6px' },
   search: { width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #d1d5db', fontSize: 15, outline: 'none' },
