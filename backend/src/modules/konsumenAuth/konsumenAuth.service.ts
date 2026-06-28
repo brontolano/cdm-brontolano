@@ -39,11 +39,28 @@ export async function register(input: { nama: string; no_wa: string; password: s
   if (no_wa.length < 9) throw errors.badRequest('Nomor WhatsApp tidak valid');
   const existing = await query<Row>('SELECT id FROM konsumen_auth WHERE no_wa=$1', [no_wa]);
   if (existing.rowCount) throw errors.conflict('Nomor WhatsApp sudah terdaftar');
+
+  // Jadikan konsumen: pakai record yang sudah ada (nomor cocok) atau buat baru,
+  // agar konsumen yang daftar mandiri muncul di admin "Data Konsumen".
+  const variants = [no_wa, '+62' + no_wa.slice(1), '62' + no_wa.slice(1)];
+  let konsumenId: string;
+  const found = await query<{ id: string }>('SELECT id FROM konsumen WHERE kontak_wa = ANY($1)', [variants]);
+  if (found.rowCount) {
+    konsumenId = found.rows[0].id;
+  } else {
+    const ins = await query<{ id: string }>(
+      `INSERT INTO konsumen (nama_toko, nama_pemilik, kontak_wa, alamat_lengkap, status)
+       VALUES ($1,$2,$3,$4,'aktif') RETURNING id`,
+      [input.nama, input.nama, no_wa, 'Belum diisi (daftar via katalog)']
+    );
+    konsumenId = ins.rows[0].id;
+  }
+
   const hash = bcrypt.hashSync(input.password, 10);
   const res = await query<Row>(
-    `INSERT INTO konsumen_auth (no_wa, nama, password_hash) VALUES ($1,$2,$3)
+    `INSERT INTO konsumen_auth (no_wa, nama, password_hash, konsumen_id) VALUES ($1,$2,$3,$4)
      RETURNING id, no_wa, nama`,
-    [no_wa, input.nama, hash]
+    [no_wa, input.nama, hash, konsumenId]
   );
   const user = toUser(res.rows[0]);
   return { user, token: signToken(user) };
