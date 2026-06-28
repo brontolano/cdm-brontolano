@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Upload } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
@@ -78,7 +79,7 @@ export default function Dashboard() {
               <select value={period} onChange={(e) => setPeriod(e.target.value)} style={{ padding: 6, borderRadius: 8, border: '1px solid var(--border)' }}>
                 {PERIODS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
               </select>
-              <button className="btn secondary small" onClick={exportOmsetCsv} disabled={!omset.length}>⬆️ CSV</button>
+              <button className="btn secondary small" onClick={exportOmsetCsv} disabled={!omset.length}><Upload size={14} aria-hidden /> CSV</button>
             </div>
           </div>
           {omset.length === 0 ? <p className="muted">Belum ada data omset.</p> : (

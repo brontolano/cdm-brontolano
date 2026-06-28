@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Printer, ReceiptText } from 'lucide-react';
 import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
@@ -78,7 +79,7 @@ export default function Invoices() {
           </div>
 
           <div className="no-print" style={{ marginTop: 12 }}>
-            <button className="btn secondary" onClick={() => window.print()}>🖨️ Print A4</button>
+            <button className="btn secondary" onClick={() => window.print()}><Printer size={15} aria-hidden /> Print A4</button>
             <button className="btn secondary" style={{ marginLeft: 8 }} onClick={() => printThermalReceipt({
               nomor: detail.nomor_invoice,
               tanggal: new Date(detail.tanggal_invoice).toLocaleDateString('id-ID'),
@@ -87,7 +88,7 @@ export default function Invoices() {
               total: Number(detail.total),
               dibayar: Number(detail.jumlah_dibayar),
               statusBayar: detail.status_pembayaran,
-            })}>🧾 Struk Thermal</button>
+            })}><ReceiptText size={15} aria-hidden /> Struk Thermal</button>
             {isAdmin && detail.status_pembayaran !== 'lunas' && (
               <span style={{ marginLeft: 12, display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                 <input type="number" value={bayar} onChange={(e) => setBayar(Number(e.target.value))} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', width: 140 }} />

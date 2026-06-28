@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ReceiptText, X } from 'lucide-react';
 import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
@@ -118,7 +118,7 @@ export default function Orders() {
                     <div className="field" style={{ marginBottom: 0 }}>
                       <input type="number" min={1} value={it.jumlah} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, jumlah: Number(e.target.value) } : x))} />
                     </div>
-                    <button type="button" className="btn secondary small" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>✕</button>
+                    <button type="button" className="btn secondary small" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1} aria-label="Hapus baris"><X size={14} aria-hidden /></button>
                   </div>
                   {b && it.jumlah > 0 && (
                     <div style={{ fontSize: 12, color: '#16a34a', marginTop: 3 }}>
@@ -158,7 +158,7 @@ export default function Orders() {
               catatan: detail.catatan,
               items: (detail.items || []).map((it: any) => ({ nama: it.nama_barang, jumlah: it.jumlah, harga: Number(it.harga_satuan), subtotal: Number(it.subtotal) })),
               total: Number(detail.total_harga),
-            })}>🧾 Cetak Struk Thermal</button>
+            })}><ReceiptText size={15} aria-hidden /> Cetak Struk Thermal</button>
           </div>
           {isAdmin && detail.status === 'draft' && (
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>

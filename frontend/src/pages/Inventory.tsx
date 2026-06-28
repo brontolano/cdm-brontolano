@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Upload, Download } from 'lucide-react';
 import { api, apiError } from '../api/client';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
@@ -192,10 +192,10 @@ export default function Inventory() {
         <h2>Inventory</h2>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn secondary" onClick={downloadTemplate}>📄 Template</button>
-          <button className="btn secondary" onClick={exportCsv}>⬆️ Export CSV</button>
+          <button className="btn secondary" onClick={exportCsv}><Upload size={15} aria-hidden /> Export CSV</button>
           {isAdmin && (
             <label className="btn secondary" style={{ cursor: 'pointer', margin: 0 }}>
-              {importing ? 'Mengimpor…' : '⬇️ Import CSV'}
+              {importing ? 'Mengimpor…' : <><Download size={15} aria-hidden /> Import CSV</>}
               <input type="file" accept=".csv,text/csv" onChange={importCsv} disabled={importing} style={{ display: 'none' }} />
             </label>
           )}
