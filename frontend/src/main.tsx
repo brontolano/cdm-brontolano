@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './store/auth';
 import { ToastProvider } from './store/toast';
 import App from './App';
+import './brontolano-tokens.css';
 import './styles.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

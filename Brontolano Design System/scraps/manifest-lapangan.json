@@ -1,0 +1,16 @@
+{
+  "name": "Brontolano Lapangan",
+  "short_name": "Bronto Lapangan",
+  "description": "Aplikasi staff lapangan PT Rojo Brontolano",
+  "start_url": "/sales",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
+  "lang": "id",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

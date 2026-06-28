@@ -1,18 +1,22 @@
 :root {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --danger: #dc2626;
-  --success: #16a34a;
-  --warning: #d97706;
-  --bg: #f1f5f9;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --text: #0f172a;
-  --muted: #64748b;
+  /* Brontolano: primary = brand merah crown (#ED1C24). Repoint ke token. */
+  --primary: var(--brand-500);
+  --primary-dark: var(--brand-600);
+  --primary-active: var(--brand-700);
+  --danger: var(--danger-500);
+  --success: var(--green-500);
+  --warning: var(--warn-500);
+  --bg: var(--slate-100);
+  --card: var(--slate-0);
+  --border: var(--slate-200);
+  --text: var(--slate-900);
+  --muted: var(--slate-500);
 }
 * { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
-a { color: var(--primary); text-decoration: none; }
+body { margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+a { color: var(--link); text-decoration: none; }
+/* Angka & kode (harga, SKU, tier) pakai mono tabular agar kolom rapi */
+.mono, .badge, table td .right, .value { font-variant-numeric: tabular-nums; }
 
 /* Layout */
 .app-shell { display: flex; min-height: 100vh; }

@@ -1,0 +1,44 @@
+/* ============================================================
+   Brontolano — Spacing, radii & borders
+   Base unit = 8px (spec doc). The app leans on 8/12/16/20/24.
+   ============================================================ */
+:root {
+  /* ---- Spacing scale (8px base) ---- */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ---- Corner radii ----
+     6 images · 8 buttons/inputs · 10–12 cards · 14 catalog cards
+     · 16 login/mobile cards · 999 pills/badges/chips */
+  --radius-xs:  6px;
+  --radius-sm:  8px;
+  --radius-md:  10px;
+  --radius-lg:  12px;
+  --radius-xl:  14px;
+  --radius-2xl: 16px;
+  --radius-3xl: 18px;
+  --radius-pill: 999px;
+
+  /* ---- Borders ---- */
+  --border-width: 1px;
+  --border-width-thick: 2px;
+
+  /* ---- Layout rails ---- */
+  --sidebar-width: 230px;
+  --sidebar-width-collapsed: 60px;
+  --topbar-height: 57px;
+  --content-max: 1200px;
+  --catalog-max: 560px;   /* mobile-first catalog column */
+  --tap-target: 44px;     /* min touch target */
+}

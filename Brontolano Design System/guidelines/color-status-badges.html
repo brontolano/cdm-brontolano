@@ -1,0 +1,33 @@
+<!-- @dsCard group="Colors" viewport="700x172" name="Status Badges" subtitle="Tokenized domain states for orders, payments & konsumen." -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-card); }
+  .grp { font-size: 11px; font-weight: 700; color: var(--text-subtle); text-transform: uppercase; letter-spacing: var(--tracking-wide); margin: 0 0 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 13px; }
+  .b { font-size: 12px; font-weight: 600; padding: 3px 11px; border-radius: var(--radius-pill); }
+</style>
+</head>
+<body>
+  <div class="grp">Order</div>
+  <div class="row">
+    <span class="b" style="background:var(--badge-draft-bg);color:var(--badge-draft-fg)">draft</span>
+    <span class="b" style="background:var(--badge-confirmed-bg);color:var(--badge-confirmed-fg)">confirmed</span>
+    <span class="b" style="background:var(--badge-proses-bg);color:var(--badge-proses-fg)">proses</span>
+    <span class="b" style="background:var(--badge-dikirim-bg);color:var(--badge-dikirim-fg)">dikirim</span>
+    <span class="b" style="background:var(--badge-selesai-bg);color:var(--badge-selesai-fg)">selesai</span>
+    <span class="b" style="background:var(--badge-batal-bg);color:var(--badge-batal-fg)">dibatalkan</span>
+  </div>
+  <div class="grp">Pembayaran &amp; Konsumen</div>
+  <div class="row">
+    <span class="b" style="background:var(--badge-lunas-bg);color:var(--badge-lunas-fg)">lunas</span>
+    <span class="b" style="background:var(--badge-sebagian-bg);color:var(--badge-sebagian-fg)">sebagian</span>
+    <span class="b" style="background:var(--badge-belum-bg);color:var(--badge-belum-fg)">belum</span>
+    <span class="b" style="background:var(--badge-aktif-bg);color:var(--badge-aktif-fg)">aktif</span>
+    <span class="b" style="background:var(--badge-nonaktif-bg);color:var(--badge-nonaktif-fg)">tidak_aktif</span>
+  </div>
+</body>
+</html>

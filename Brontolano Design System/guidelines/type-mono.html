@@ -1,0 +1,30 @@
+<!-- @dsCard group="Type" viewport="700x196" name="Mono & Data" subtitle="JetBrains Mono for SKU, tier codes & money — tabular." -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-card); color: var(--text); font-family: var(--font-mono); }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  td, th { text-align: right; padding: 6px 10px; font-size: 13px; }
+  th { font-size: 10px; color: var(--text-subtle); text-transform: uppercase; letter-spacing: var(--tracking-wide); border-bottom: 1px solid var(--border); }
+  td.l, th.l { text-align: left; }
+  .sku { color: var(--text-muted); }
+  .tier { color: var(--brand-600); font-weight: 700; }
+  .rp { font-weight: 600; }
+  .cap { font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); margin-top: 12px; }
+</style>
+</head>
+<body>
+  <table>
+    <thead><tr><th class="l">SKU</th><th class="l">Tier</th><th>Qty</th><th>Harga /karton</th></tr></thead>
+    <tbody>
+      <tr><td class="l sku">MKG-0012</td><td class="l tier">HET</td><td>3</td><td class="rp">Rp 16.000</td></tr>
+      <tr><td class="l sku">MKG-0012</td><td class="l tier">S2</td><td>12</td><td class="rp">Rp 15.400</td></tr>
+      <tr><td class="l sku">MKG-0012</td><td class="l tier">S4</td><td>200</td><td class="rp">Rp 14.800</td></tr>
+    </tbody>
+  </table>
+  <div class="cap">Tabular numerals keep Rupiah columns aligned; tier codes (HET·S1–S4) and SKUs read as data, not prose.</div>
+</body>
+</html>

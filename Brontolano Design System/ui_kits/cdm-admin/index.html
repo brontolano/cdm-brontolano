@@ -1,0 +1,144 @@
+<!-- @dsCard group="CDM Admin" viewport="1320x840" name="CDM Admin — Back-office" subtitle="Desktop ops console: dashboard, konsumen, inventory, orders." -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brontolano · CDM Admin</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--surface-page); }
+  .ic { display: inline-flex; align-items: center; justify-content: center; }
+  .ic svg { width: 1em; height: 1em; }
+
+  /* Shell */
+  .adm { display: flex; min-height: 100vh; }
+  .adm__side { width: var(--sidebar-width); background: var(--slate-900); color: var(--slate-300); display: flex; flex-direction: column; padding: 16px 12px; position: sticky; top: 0; height: 100vh; flex-shrink: 0; }
+  .adm__brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; }
+  .adm__brand img { height: 30px; width: auto; }
+  .adm__brandtext { display: flex; flex-direction: column; line-height: 1.2; }
+  .adm__brandtext strong { color: #fff; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+  .adm__brandtext span { font-size: 11px; color: var(--slate-400); }
+  .adm__nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .adm__navitem { display: flex; align-items: center; gap: 11px; background: none; border: none; color: var(--slate-300); padding: 9px 12px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; font-family: var(--font-sans); cursor: pointer; text-align: left; transition: background var(--dur-fast), color var(--dur-fast); }
+  .adm__navitem .ic { font-size: 18px; color: var(--slate-400); }
+  .adm__navitem:hover { background: var(--slate-800); color: #fff; }
+  .adm__navitem.is-active { background: var(--brand-500); color: #fff; }
+  .adm__navitem.is-active .ic { color: #fff; }
+  .adm__sidefoot { display: flex; align-items: center; gap: 11px; padding: 10px 12px; font-size: 13px; color: var(--slate-400); border-top: 1px solid var(--slate-800); margin-top: 8px; }
+  .adm__sidefoot .ic { font-size: 17px; }
+
+  .adm__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .adm__top { position: sticky; top: 0; z-index: var(--z-header); background: var(--surface-card); border-bottom: 1px solid var(--border); padding: 10px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .adm__search { display: flex; align-items: center; gap: 8px; background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; width: 340px; max-width: 40vw; }
+  .adm__search .ic { color: var(--text-subtle); font-size: 16px; }
+  .adm__search input { border: none; background: none; outline: none; font-family: var(--font-sans); font-size: 14px; width: 100%; color: var(--text); }
+  .adm__user { display: flex; align-items: center; gap: 14px; }
+  .adm__icon { width: 38px; height: 38px; border: none; background: none; border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 19px; }
+  .adm__icon:hover { background: var(--surface-hover); }
+  .adm__userbox { display: flex; align-items: center; gap: 10px; }
+  .adm__avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--brand-500); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+  .adm__usermeta { display: flex; flex-direction: column; line-height: 1.25; }
+  .adm__usermeta strong { font-size: 14px; }
+  .adm__role { font-size: 11px; font-weight: 600; color: var(--info-700); background: var(--info-50); padding: 1px 8px; border-radius: var(--radius-pill); width: fit-content; }
+  .adm__content { padding: 22px; max-width: var(--content-max); width: 100%; }
+
+  /* Views */
+  .view__head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+  .view__head h2 { margin: 0; font-size: 24px; }
+  .view__sub { color: var(--text-muted); font-size: 13px; }
+  .statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .ds-stat__icon .ic { color: var(--slate-400); font-size: 17px; }
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .chart { display: flex; align-items: flex-end; gap: 12px; height: 160px; padding-top: 8px; }
+  .chart__col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; height: 100%; justify-content: flex-end; }
+  .chart__bar { width: 100%; max-width: 38px; background: var(--brand-500); border-radius: 6px 6px 0 0; transition: background var(--dur-fast); }
+  .chart__col:hover .chart__bar { background: var(--brand-600); }
+  .chart__lbl { font-size: 12px; color: var(--text-muted); }
+
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-subtle); font-weight: 700; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface-sunken); }
+  .tbl td { padding: 11px 12px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tbody tr:hover { background: var(--surface-sunken); }
+  .tbl .r, th.r { text-align: right; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .mono { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-muted); }
+  .muted { color: var(--text-muted); }
+  .sm { font-size: 12px; }
+  .nowrap { white-space: nowrap; }
+  .row-low { background: #fef2f2 !important; }
+  .warn-ic { color: var(--warning); font-size: 15px; margin-left: 5px; vertical-align: -2px; }
+  .hetcap { display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; font-size: 11px; color: var(--warn-700); }
+  .hetcap .ic { font-size: 12px; }
+  .gpslink { display: inline-flex; align-items: center; gap: 4px; color: var(--info-700); font-size: 13px; }
+  .gpslink .ic { font-size: 14px; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .toolbar__search { width: 300px; max-width: 100%; }
+  .toolbar__search .ds-field { margin-bottom: 0; }
+  .toolbar__filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .toolbar__actions { display: flex; gap: 8px; }
+  .chip { background: var(--surface-card); border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius-pill); padding: 6px 14px; font-size: 13px; font-weight: 600; font-family: var(--font-sans); cursor: pointer; transition: all var(--dur-fast); }
+  .chip:hover { border-color: var(--border-strong); color: var(--text); }
+  .chip.is-active { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+
+  .aging { display: flex; flex-direction: column; }
+  .aging__row { display: flex; justify-content: space-between; align-items: center; padding: 11px 4px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .aging__row:last-child { border-bottom: none; }
+  .aging__row.is-warn strong { color: var(--warn-700); }
+  .aging__row.is-bad { color: var(--danger); }
+  .aging__row.is-bad strong { color: var(--danger); }
+
+  .placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 80px 20px; color: var(--text-muted); text-align: center; }
+  .placeholder .ic { font-size: 40px; color: var(--slate-300); }
+  .placeholder h3 { margin: 0; color: var(--text); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="AdminShell.jsx"></script>
+<script type="text/babel" src="DashboardView.jsx"></script>
+<script type="text/babel" src="KonsumenView.jsx"></script>
+<script type="text/babel" src="InventoryView.jsx"></script>
+<script type="text/babel" src="OrdersView.jsx"></script>
+<script type="text/babel">
+  const { useState } = React;
+  const TITLES = { pesanan: 'Pesanan Masuk', invoices: 'Invoices', pengiriman: 'Pengiriman', broadcasting: 'Broadcast WA', users: 'Manajemen User' };
+  const ICONS = { pesanan: 'inbox', invoices: 'banknote', pengiriman: 'truck', broadcasting: 'message-circle', users: 'users' };
+
+  function Placeholder({ k }) {
+    const Icon = window.Icon;
+    return (
+      <div className="view">
+        <div className="view__head"><h2>{TITLES[k]}</h2></div>
+        <div className="ds-card"><div className="placeholder">
+          <Icon name={ICONS[k]} />
+          <h3>{TITLES[k]}</h3>
+          <p>Layar ini ada di aplikasi CDM penuh. Lihat Dashboard, Konsumen, Inventory &amp; Orders untuk demo interaktif UI kit ini.</p>
+        </div></div>
+      </div>
+    );
+  }
+
+  function App() {
+    const [active, setActive] = useState('dashboard');
+    const { AdminShell, DashboardView, KonsumenView, InventoryView, OrdersView } = window;
+    let view;
+    if (active === 'dashboard') view = <DashboardView />;
+    else if (active === 'konsumen') view = <KonsumenView />;
+    else if (active === 'inventory') view = <InventoryView />;
+    else if (active === 'orders') view = <OrdersView />;
+    else view = <Placeholder k={active} />;
+    return <AdminShell active={active} onNav={setActive}><div key={active}>{view}</div></AdminShell>;
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

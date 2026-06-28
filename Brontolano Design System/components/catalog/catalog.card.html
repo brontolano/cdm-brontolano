@@ -1,0 +1,56 @@
+<!-- @dsCard group="Components" viewport="700x440" name="Catalog — Products & Cart" subtitle="ProductCard · QtyStepper · CartBar (live, interactive)." -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-page); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .barwrap { margin-top: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const NS = window.BrontolanoDesignSystem_7cf21c || {};
+  const { ProductCard, CartBar } = NS;
+  const { useState } = React;
+
+  const PRODUCTS = [
+    { id: 'a', name: 'Indomie Goreng Spesial', sku: 'MKG-0012', category: 'Mie Instan', price: 58000, perPcs: 2420, isi: 24 },
+    { id: 'b', name: 'MinyaKita Minyak Goreng 1L', sku: 'SMB-0033', category: 'Sembako', price: 188000, perPcs: 15700, isi: 12 },
+    { id: 'c', name: 'Gula Pasir Gulaku 1kg', sku: 'SMB-0007', category: 'Sembako', price: 174000, perPcs: 14500, isi: 12 },
+  ];
+
+  function Demo() {
+    const [cart, setCart] = useState({ a: 12 });
+    const setQty = (id, q) => setCart((c) => { const n = { ...c }; if (q <= 0) delete n[id]; else n[id] = q; return n; });
+    const total = PRODUCTS.reduce((s, p) => s + (cart[p.id] || 0) * p.price, 0);
+    const count = Object.values(cart).reduce((s, q) => s + q, 0);
+    return (
+      <React.Fragment>
+        <div className="grid">
+          {PRODUCTS.map((p) => {
+            const qty = cart[p.id] || 0;
+            return (
+              <ProductCard key={p.id} {...p}
+                hotTier={qty >= 10 ? 'S2' : null}
+                qty={qty} onQty={(q) => setQty(p.id, q)} />
+            );
+          })}
+        </div>
+        <div className="barwrap">
+          {count > 0 && <CartBar count={count} total={total} onClick={() => {}} />}
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

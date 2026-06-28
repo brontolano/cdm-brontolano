@@ -1,0 +1,41 @@
+<!-- @dsCard group="Brand" viewport="700x200" name="Logo & Mark" subtitle="The red crown — never recolor. Wordmark in Jakarta Sans ExtraBold." -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 0; background: var(--surface-card); color: var(--text); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; height: 200px; }
+  .cell { display: flex; align-items: center; gap: 14px; padding: 24px; }
+  .light { background: #fff; }
+  .dark { background: var(--ink-black); }
+  .lock { display: flex; align-items: center; gap: 12px; }
+  .lock img { height: 46px; width: auto; display: block; }
+  .wm { font-family: var(--font-display); font-weight: 800; font-size: 26px; letter-spacing: -0.02em; }
+  .sub { font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="cell light">
+      <div class="lock">
+        <img src="../assets/brontolano-mark.png" alt="Brontolano">
+        <div>
+          <div class="wm" style="color:var(--slate-900)">Brontolano</div>
+          <div class="sub" style="color: rgb(0, 0, 0); height: 16px; padding: 1px 0px 0px; margin: -9px 0px 0px">Grosir Sembako</div>
+        </div>
+      </div>
+    </div>
+    <div class="cell dark">
+      <div class="lock">
+        <img src="../assets/brontolano-mark.png" alt="Brontolano">
+        <div>
+          <div class="wm" style="color:#fff">Brontolano</div>
+          <div class="sub" style="color: rgb(255, 255, 255); margin: -10px 0px 0px">Katalog Grosir</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

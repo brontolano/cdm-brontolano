@@ -1,0 +1,26 @@
+<!-- @dsCard group="Spacing" viewport="700x190" name="Elevation" subtitle="Flat by default — shadow only for things that float." -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 26px 22px; background: var(--surface-page); color: var(--text); }
+  .row { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+  .u { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .box { width: 96px; height: 60px; background: #fff; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); }
+  .u .l { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-subtle); }
+  .brand { background: var(--brand-500); color: #fff; }
+  .commerce { background: var(--green-500); color: #fff; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="u"><div class="box" style="border:1px solid var(--border);box-shadow:var(--shadow-card)">card</div><span class="l">xs · card</span></div>
+    <div class="u"><div class="box" style="box-shadow:var(--shadow-md)">toast</div><span class="l">md · toast</span></div>
+    <div class="u"><div class="box" style="box-shadow:var(--shadow-lg)">modal</div><span class="l">lg/xl · modal</span></div>
+    <div class="u"><div class="box brand" style="box-shadow:var(--shadow-brand)">CTA</div><span class="l">brand glow</span></div>
+    <div class="u"><div class="box commerce" style="box-shadow:var(--shadow-commerce)">Cart</div><span class="l">commerce glow</span></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!-- @dsCard group="Components" viewport="700x400" name="Badges, Tiers, Price & Stats" subtitle="StatusBadge · TierBadge · Price · StatCard." -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-card); }
+  .lane { margin-bottom: 16px; }
+  .lane h4 { font-size: 11px; text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-subtle); margin: 0 0 9px; font-weight: 700; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const NS = window.BrontolanoDesignSystem_7cf21c || {};
+  const { StatusBadge, TierBadge, Price, StatCard } = NS;
+  const rupiah = (n) => 'Rp ' + (Number(n) || 0).toLocaleString('id-ID');
+
+  function Demo() {
+    return (
+      <React.Fragment>
+        <div className="lane">
+          <h4>Status badges</h4>
+          <div className="row">
+            <StatusBadge status="draft" /><StatusBadge status="confirmed" /><StatusBadge status="proses" />
+            <StatusBadge status="dikirim" /><StatusBadge status="selesai" /><StatusBadge status="lunas" />
+            <StatusBadge status="belum" /><StatusBadge status="aktif" /><StatusBadge status="tidak_aktif" />
+          </div>
+        </div>
+        <div className="lane">
+          <h4>Price tiers</h4>
+          <div className="row">
+            <TierBadge tier="HET" range /><TierBadge tier="S1" range /><TierBadge tier="S2" active />
+            <TierBadge tier="S3" /><TierBadge tier="S4" /><TierBadge tier="S2" hot />
+          </div>
+        </div>
+        <div className="lane">
+          <h4>Price</h4>
+          <div className="row" style={{ gap: 32 }}>
+            <Price amount={58000} unit="karton" perPcs={2420} isi={24} size="lg" />
+            <Price amount={16000} unit="pcs" size="md" />
+            <Price amount={696000} unit="" size="sm" />
+          </div>
+        </div>
+        <div className="lane">
+          <h4>Stat cards</h4>
+          <div className="stats">
+            <StatCard label="Konsumen Aktif" value="128" icon="🏪" />
+            <StatCard label="Omset Bulan Ini" value={rupiah(24800000)} accent delta="12%" deltaDir="up" />
+            <StatCard label="Stok Rendah" value="6" icon="📦" delta="2 baru" deltaDir="down" />
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

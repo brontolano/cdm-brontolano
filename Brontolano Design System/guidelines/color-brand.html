@@ -1,0 +1,36 @@
+<!-- @dsCard group="Colors" viewport="700x176" name="Brontolano Red" subtitle="Brand primary — the crown red. Hover 600, active 700." -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-card); }
+  .ramp { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+  .sw { height: 88px; display: flex; align-items: flex-end; padding: 7px; }
+  .sw span { font-family: var(--font-mono); font-size: 10px; font-weight: 600; }
+  .meta { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; }
+  .meta .base { font-family: var(--font-mono); font-size: 13px; color: var(--text); }
+  .meta .base b { color: var(--brand-500); }
+  .meta .use { font-size: 12px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="ramp">
+    <div class="sw" style="background:var(--brand-50)"><span style="color:#78151a">50</span></div>
+    <div class="sw" style="background:var(--brand-100)"><span style="color:#78151a">100</span></div>
+    <div class="sw" style="background:var(--brand-200)"><span style="color:#78151a">200</span></div>
+    <div class="sw" style="background:var(--brand-300)"><span style="color:#78151a">300</span></div>
+    <div class="sw" style="background:var(--brand-400)"><span style="color:#fff">400</span></div>
+    <div class="sw" style="background:var(--brand-500)"><span style="color:#fff">500</span></div>
+    <div class="sw" style="background:var(--brand-600)"><span style="color:#fff">600</span></div>
+    <div class="sw" style="background:var(--brand-700)"><span style="color:#fff">700</span></div>
+    <div class="sw" style="background:var(--brand-800)"><span style="color:#fff">800</span></div>
+    <div class="sw" style="background:var(--brand-900)"><span style="color:#fff">900</span></div>
+  </div>
+  <div class="meta">
+    <div class="base">--brand-500 <b>#ED1C24</b></div>
+    <div class="use">Identity · primary action · brand moments</div>
+  </div>
+</body>
+</html>

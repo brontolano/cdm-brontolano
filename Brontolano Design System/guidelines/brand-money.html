@@ -1,0 +1,30 @@
+<!-- @dsCard group="Brand" viewport="700x172" name="Money & Numerals" subtitle="Rp + id-ID thousands · tabular · per-unit pricing." -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-card); color: var(--text); }
+  .row { display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; }
+  .big { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .unit { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+  .pcs { font-size: 14px; color: var(--green-600); font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .k { font-family: var(--font-mono); font-size: 11px; color: var(--text-subtle); margin-top: 8px; }
+  .ex { font-family: var(--font-mono); font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.8; }
+  .ex .l { color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div>
+      <div class="big">Rp 58.000 <span class="unit" style="margin: 0px 0px 0px -6px">/karton</span></div>
+      <div class="pcs">≈ Rp 2.420 /pcs · isi 24</div>
+      <div class="k">toLocaleString('id-ID')</div>
+    </div>
+    <div class="ex" style="text-align: right">Subtotal  Rp    696.000
+Piutang  Rp  1.250.000
+Omset  Rp 24.800.000</div>
+  </div>
+</body>
+</html>
