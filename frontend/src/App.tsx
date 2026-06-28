@@ -48,7 +48,10 @@ function Layout({ children }: { children: React.ReactNode }) {
       <aside className="sidebar">
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/brontolano-mark.png" alt="" style={{ height: 24, width: 'auto' }} />
-          <span>Brontolano</span>
+          <span className="brand-wordmark">
+            Brontolano
+            <small>CDM Admin</small>
+          </span>
         </h1>
         <nav>
           {visible.map((m) => (
