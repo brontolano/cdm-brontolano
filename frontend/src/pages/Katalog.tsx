@@ -33,15 +33,9 @@ const TRUST = [
   { icon: Truck, t: 'Kirim cepat' },
   { icon: MessageCircle, t: 'Order via WA' },
 ];
-/** Metode pembayaran — `enabled` mengikuti toggle admin (Fase 4 backend). COD utama. */
-const PAYMENTS = [
-  { id: 'cod', name: 'COD — Bayar di Tempat', desc: 'Tunai saat barang tiba', Icon: HandCoins, primary: true, enabled: true },
-  { id: 'qris', name: 'QRIS', desc: 'Scan QR · semua e-wallet & bank', Icon: QrCode, enabled: true },
-  { id: 'transfer', name: 'Transfer Bank', desc: 'BCA · BRI · Mandiri', Icon: Building2, enabled: true },
-  { id: 'va', name: 'Virtual Account', desc: 'Pembayaran VA otomatis', Icon: Landmark, enabled: true },
-  { id: 'card', name: 'Kartu Kredit/Debit', desc: 'Dinonaktifkan oleh admin', Icon: CreditCard, enabled: false },
-];
-const payName = (id: string) => PAYMENTS.find((p) => p.id === id)?.name || '';
+// Ikon per kode metode (label/aktif datang dari API admin-configurable).
+const PAY_ICON: Record<string, typeof HandCoins> = { cod: HandCoins, qris: QrCode, transfer: Building2, va: Landmark, card: CreditCard };
+interface PayMethod { kode: string; label: string; deskripsi: string; is_primary: boolean; butuh_gateway: boolean; }
 const LADDER: [string, string][] = [['HET', '1–5'], ['S1', '6–9'], ['S2', '10–24'], ['S3', '25–150'], ['S4', '>150']];
 
 // Timeline status pesanan: dikonfirmasi → disiapkan → dikirim → selesai.
@@ -67,6 +61,8 @@ export default function Katalog() {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [sheet, setSheet] = useState<null | 'cart' | 'checkout' | 'done'>(null);
   const [pay, setPay] = useState('cod');
+  const [payMethods, setPayMethods] = useState<PayMethod[]>([]);
+  const payName = (kode: string) => payMethods.find((p) => p.kode === kode)?.label || kode.toUpperCase();
   // Akun konsumen (opsional)
   const [user, setUser] = useState<KonsumenUser | null>(null);
   const [auth, setAuth] = useState<null | 'login' | 'signup'>(null);
@@ -99,6 +95,14 @@ export default function Katalog() {
   useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [search, kategori]);
   useEffect(() => { api.get('/public/catalog/categories').then((r) => setKategoriList(r.data.data)); }, []);
   useEffect(() => { kauth.fetchMe().then((u) => u && setUser(u)); }, []);
+  useEffect(() => {
+    api.get('/public/catalog/payment-methods').then((r) => {
+      const list: PayMethod[] = r.data.data;
+      setPayMethods(list);
+      const primary = list.find((p) => p.is_primary) || list[0];
+      if (primary) setPay(primary.kode);
+    }).catch(() => {});
+  }, []);
 
   async function doAuth(e: React.FormEvent) {
     e.preventDefault();
@@ -308,18 +312,18 @@ export default function Katalog() {
 
               <div className="cat__formsec">Metode Pembayaran</div>
               <div className="cat__paylist">
-                {PAYMENTS.map((p) => {
-                  const I = p.Icon;
+                {payMethods.length === 0 ? <p className="cat__paydesc">Memuat metode…</p> : payMethods.map((p) => {
+                  const I = PAY_ICON[p.kode] || HandCoins;
                   return (
-                    <button key={p.id} type="button" disabled={!p.enabled}
-                      className={'cat__payopt' + (pay === p.id ? ' is-sel' : '') + (!p.enabled ? ' is-off' : '')}
-                      onClick={() => p.enabled && setPay(p.id)}>
+                    <button key={p.kode} type="button"
+                      className={'cat__payopt' + (pay === p.kode ? ' is-sel' : '')}
+                      onClick={() => setPay(p.kode)}>
                       <span className="cat__payic"><I size={19} aria-hidden /></span>
                       <span className="cat__payinfo">
-                        <span className="cat__payname">{p.name}{p.primary && <span className="cat__paybadge">Utama</span>}{!p.enabled && <span className="cat__payoff">Nonaktif</span>}</span>
-                        <span className="cat__paydesc">{p.desc}</span>
+                        <span className="cat__payname">{p.label}{p.is_primary && <span className="cat__paybadge">Utama</span>}</span>
+                        <span className="cat__paydesc">{p.deskripsi}</span>
                       </span>
-                      <span className="cat__payradio">{pay === p.id && <span className="cat__paydot" />}</span>
+                      <span className="cat__payradio">{pay === p.kode && <span className="cat__paydot" />}</span>
                     </button>
                   );
                 })}
