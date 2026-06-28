@@ -1,42 +1,66 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PackagePlus, PackageMinus, LogOut, ChevronRight, type LucideIcon } from 'lucide-react';
+import { Package, AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Boxes } from 'lucide-react';
 import { useAuth } from '../../store/auth';
+import { api } from '../../api/client';
 import StaffBottomNav from '../staff/StaffBottomNav';
+import '../staff/staff.css';
 
-const MENU: { path: string; icon: LucideIcon; label: string; desc: string }[] = [
-  { path: '/gudang/masuk', icon: PackagePlus, label: 'Barang Masuk', desc: 'Foto nota + stok + HPP' },
-  { path: '/gudang/keluar', icon: PackageMinus, label: 'Barang Keluar', desc: 'Catat keluar manual + alasan' },
-];
+interface Barang { id: string; nama_barang: string; stok_saat_ini: number; stok_minimum: number; unit: string; kategori: string | null; }
 
 export default function GudangHome() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const nav = useNavigate();
+  const [list, setList] = useState<Barang[] | null>(null);
+
+  useEffect(() => { api.get('/inventory', { params: { limit: 300 } }).then((r) => setList(r.data.data)).catch(() => setList([])); }, []);
+
+  const namaDepan = (user?.nama_lengkap || 'Staff').split(' ')[0];
+  const low = (list || []).filter((b) => b.stok_saat_ini < b.stok_minimum);
+  const kategori = new Set((list || []).map((b) => b.kategori).filter(Boolean)).size;
+
   return (
     <div className="stf-has-nav" style={{ minHeight: '100vh', background: '#f1f5f9' }}>
-      <header style={{ background: '#c2410c', color: '#fff', padding: 16, paddingTop: 'calc(16px + env(safe-area-inset-top))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/brontolano-mark.png" alt="" style={{ height: 30, width: 'auto' }} />
+      <header className="stf__hero">
+        <div className="stf__herotop">
           <div>
-            <div style={{ fontSize: 13, opacity: 0.85 }}>Staff Gudang · Brontolano</div>
-            <strong style={{ fontSize: 18 }}>{user?.nama_lengkap}</strong>
+            <div className="stf__hello">Halo, {namaDepan}</div>
+            <div className="stf__hsub">Staff Gudang · Brontolano</div>
           </div>
+          <span className="stf__sync"><span className="stf__syncdot" /> Tersinkron</span>
         </div>
-        <button onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.2)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 12px', fontWeight: 600 }}><LogOut size={15} aria-hidden /> Keluar</button>
       </header>
-      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {MENU.map((m) => {
-          const Icon = m.icon;
-          return (
-            <button key={m.path} onClick={() => nav(m.path)} style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 18, textAlign: 'left', cursor: 'pointer' }}>
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 12, background: '#fff7ed', color: '#c2410c', flexShrink: 0 }}><Icon size={24} aria-hidden /></span>
-              <span style={{ flex: 1 }}>
-                <span style={{ display: 'block', fontWeight: 700, fontSize: 16 }}>{m.label}</span>
-                <span style={{ display: 'block', color: '#64748b', fontSize: 13 }}>{m.desc}</span>
-              </span>
-              <ChevronRight size={22} color="#cbd5e1" aria-hidden />
-            </button>
-          );
-        })}
+
+      <div className="stf__body2">
+        <div className="stf__mini">
+          <div className="stf__minicard"><Boxes size={18} aria-hidden /><strong>{list ? list.length : '—'}</strong><span>Barang</span></div>
+          <div className="stf__minicard"><Package size={18} aria-hidden /><strong>{kategori}</strong><span>Kategori</span></div>
+          <div className="stf__minicard"><AlertTriangle size={18} aria-hidden /><strong className={low.length ? 'is-warn' : ''}>{low.length}</strong><span>Restok</span></div>
+        </div>
+
+        <div className="stf__quick" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+          <button className="stf__qbtn" onClick={() => nav('/gudang/masuk')}><span className="stf__qic stf__qic--green"><ArrowDownToLine size={19} aria-hidden /></span>Stok Masuk</button>
+          <button className="stf__qbtn" onClick={() => nav('/gudang/keluar')}><span className="stf__qic stf__qic--red"><ArrowUpFromLine size={19} aria-hidden /></span>Stok Keluar</button>
+        </div>
+
+        <div className="stf__sectionhead">
+          <strong>Perlu Restok</strong>
+          {low.length > 0 && <span className="stf__warnpill"><AlertTriangle size={13} aria-hidden /> {low.length}</span>}
+        </div>
+        <div className="stf__tasks">
+          {list == null ? <div className="stf__emptytask">Memuat…</div>
+            : low.length === 0 ? <div className="stf__emptytask">Semua stok aman. 👍</div>
+            : low.map((b) => (
+              <div className="stf__stokrow" key={b.id}>
+                <span className="stf__stokinfo">
+                  <span className="stf__taskname">{b.nama_barang}</span>
+                  <span className="stf__taskaddr">Min. {b.stok_minimum} {b.unit}</span>
+                </span>
+                <span className="stf__stoknum">{b.stok_saat_ini}<span> {b.unit}</span></span>
+                <button className="btn small" onClick={() => nav('/gudang/masuk')}>+ Masuk</button>
+              </div>
+            ))}
+        </div>
       </div>
       <StaffBottomNav />
     </div>

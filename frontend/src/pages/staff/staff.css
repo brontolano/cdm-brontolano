@@ -55,6 +55,12 @@
 .stf__taskic--selesai { background: var(--green-50); color: var(--green-600); }
 .stf__taskinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .stf__emptytask { text-align: center; color: var(--text-muted); padding: 18px; font-size: 13px; }
+.stf__warnpill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--warn-700); background: var(--warn-50); border-radius: var(--radius-pill); padding: 3px 10px; }
+.stf__stokrow { display: flex; align-items: center; gap: 10px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; }
+.stf__stokinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.stf__stoknum { font-size: 17px; font-weight: 800; color: var(--danger); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stf__stoknum span { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+.stf__minicard strong.is-warn { color: var(--danger); }
 
 /* Akun */
 .stf__head { background: var(--slate-900); color: #fff; padding: 18px 16px; display: flex; align-items: baseline; gap: 10px; position: sticky; top: 0; z-index: 20; padding-top: calc(18px + env(safe-area-inset-top)); }
