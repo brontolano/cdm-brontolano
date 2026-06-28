@@ -14,7 +14,7 @@
   --content-max: 1200px;
 }
 * { box-sizing: border-box; }
-body { margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+body { margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 a { color: var(--link); text-decoration: none; }
 /* Headings — Plus Jakarta Sans, tebal, tracking rapat (per guidelines) */
 h1, h2, h3 { font-family: var(--font-display); letter-spacing: var(--tracking-tight); line-height: var(--leading-snug); }
