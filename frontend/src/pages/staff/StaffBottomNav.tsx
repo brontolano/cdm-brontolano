@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Truck, ShoppingCart, Store, Package, ArrowDownToLine, ArrowUpFromLine, User, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../../store/auth';
 import './staff.css';
@@ -22,7 +22,10 @@ const GUDANG: Tab[] = [
 /** Bottom tab nav untuk PWA staff (role-aware). */
 export default function StaffBottomNav() {
   const { user } = useAuth();
-  const tabs = user?.role === 'gudang' ? GUDANG : LAPANGAN;
+  const { pathname } = useLocation();
+  // Tab ikut path (admin bisa preview kedua PWA); fallback ke role staff.
+  const isGudang = pathname.startsWith('/gudang') || (!pathname.startsWith('/sales') && user?.role === 'gudang');
+  const tabs = isGudang ? GUDANG : LAPANGAN;
   return (
     <nav className="stf__nav">
       {tabs.map((t) => {
