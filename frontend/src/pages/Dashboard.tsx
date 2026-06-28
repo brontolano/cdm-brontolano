@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { api } from '../api/client';
 import { Spinner, rupiah, Badge } from '../components/ui';
+import { StatCard } from '../components/ds';
 
 const PERIODS = [
   { key: 'harian', label: 'Harian' },
@@ -68,15 +69,7 @@ export default function Dashboard() {
       <div className="statgrid">
         {cards.map((c) => {
           const Icon = c.icon;
-          return (
-            <div key={c.label} className={'card stat' + (c.accent ? ' is-accent' : '')}>
-              <div className="stat__head">
-                <div className="label">{c.label}</div>
-                <Icon className="stat__icon" size={18} aria-hidden />
-              </div>
-              <div className="value">{c.value}</div>
-            </div>
-          );
+          return <StatCard key={c.label} label={c.label} value={c.value} accent={c.accent} icon={<Icon size={18} />} />;
         })}
       </div>
 
