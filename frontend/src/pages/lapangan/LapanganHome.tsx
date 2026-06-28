@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Truck, Store, ReceiptText, LogOut, ChevronRight, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../../store/auth';
+import StaffBottomNav from '../staff/StaffBottomNav';
 
 const MENU: { path: string; icon: LucideIcon; label: string; desc: string }[] = [
   { path: '/sales/pengiriman', icon: Truck, label: 'Rute Kirim', desc: 'Tugas pengiriman & cetak' },
@@ -12,7 +13,7 @@ export default function LapanganHome() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   return (
-    <div style={{ minHeight: '100vh', background: '#f1f5f9', paddingBottom: 24 }}>
+    <div className="stf-has-nav" style={{ minHeight: '100vh', background: '#f1f5f9' }}>
       <header style={{ background: '#1e3a8a', color: '#fff', padding: '16px 16px calc(16px + env(safe-area-inset-top))', paddingTop: 'calc(16px + env(safe-area-inset-top))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src="/brontolano-mark.png" alt="" style={{ height: 30, width: 'auto' }} />
@@ -38,6 +39,7 @@ export default function LapanganHome() {
           );
         })}
       </div>
+      <StaffBottomNav />
     </div>
   );
 }

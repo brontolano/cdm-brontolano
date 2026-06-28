@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { PackagePlus, PackageMinus, LogOut, ChevronRight, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../../store/auth';
+import StaffBottomNav from '../staff/StaffBottomNav';
 
 const MENU: { path: string; icon: LucideIcon; label: string; desc: string }[] = [
   { path: '/gudang/masuk', icon: PackagePlus, label: 'Barang Masuk', desc: 'Foto nota + stok + HPP' },
@@ -11,7 +12,7 @@ export default function GudangHome() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   return (
-    <div style={{ minHeight: '100vh', background: '#f1f5f9', paddingBottom: 24 }}>
+    <div className="stf-has-nav" style={{ minHeight: '100vh', background: '#f1f5f9' }}>
       <header style={{ background: '#c2410c', color: '#fff', padding: 16, paddingTop: 'calc(16px + env(safe-area-inset-top))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src="/brontolano-mark.png" alt="" style={{ height: 30, width: 'auto' }} />
@@ -37,6 +38,7 @@ export default function GudangHome() {
           );
         })}
       </div>
+      <StaffBottomNav />
     </div>
   );
 }

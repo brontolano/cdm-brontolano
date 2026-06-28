@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import StaffBottomNav from '../staff/StaffBottomNav';
 
 /** Header mobile dengan tombol kembali untuk sub-halaman lapangan/gudang. */
 export function MobileHeader({ title, back = '/sales', color = '#1e3a8a' }: { title: string; back?: string; color?: string }) {
@@ -14,9 +15,10 @@ export function MobileHeader({ title, back = '/sales', color = '#1e3a8a' }: { ti
 
 export function MobilePage({ title, back, color, children }: { title: string; back?: string; color?: string; children: ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#f1f5f9', paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}>
+    <div className="stf-has-nav" style={{ minHeight: '100vh', background: '#f1f5f9' }}>
       <MobileHeader title={title} back={back} color={color} />
       <div style={{ padding: 14 }}>{children}</div>
+      <StaffBottomNav />
     </div>
   );
 }

@@ -21,6 +21,7 @@ import LapanganPos from './pages/lapangan/LapanganPos';
 import GudangHome from './pages/gudang/GudangHome';
 import GudangMasuk from './pages/gudang/GudangMasuk';
 import GudangKeluar from './pages/gudang/GudangKeluar';
+import StaffAkun from './pages/staff/StaffAkun';
 
 interface MenuItem {
   path: string;
@@ -126,10 +127,12 @@ export default function App() {
       <Route path="/sales/pengiriman" element={<MobileProtected roles={lap}><LapanganPengiriman /></MobileProtected>} />
       <Route path="/sales/konsumen" element={<MobileProtected roles={lap}><LapanganKonsumen /></MobileProtected>} />
       <Route path="/sales/pos" element={<MobileProtected roles={lap}><LapanganPos /></MobileProtected>} />
+      <Route path="/sales/akun" element={<MobileProtected roles={lap}><StaffAkun /></MobileProtected>} />
       {/* PWA Staff Gudang (mobile) */}
       <Route path="/gudang" element={<MobileProtected roles={gud}><GudangHome /></MobileProtected>} />
       <Route path="/gudang/masuk" element={<MobileProtected roles={gud}><GudangMasuk /></MobileProtected>} />
       <Route path="/gudang/keluar" element={<MobileProtected roles={gud}><GudangKeluar /></MobileProtected>} />
+      <Route path="/gudang/akun" element={<MobileProtected roles={gud}><StaffAkun /></MobileProtected>} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/konsumen" element={<Protected><Konsumen /></Protected>} />
