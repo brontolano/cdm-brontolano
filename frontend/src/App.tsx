@@ -46,7 +46,10 @@ function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <h1>🛒 CDM</h1>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <img src="/brontolano-mark.png" alt="" style={{ height: 24, width: 'auto' }} />
+          <span>Brontolano</span>
+        </h1>
         <nav>
           {visible.map((m) => (
             <NavLink key={m.path} to={m.path} end={m.path === '/'}>

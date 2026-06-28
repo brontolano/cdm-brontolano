@@ -28,8 +28,11 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
-        <h1>🛒 Consumer Data Manager</h1>
-        <p>Masuk untuk mengelola konsumen, order &amp; pengiriman</p>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="/brontolano-mark.png" alt="" style={{ height: 30, width: 'auto' }} />
+          <span>Brontolano</span>
+        </h1>
+        <p>Masuk untuk kelola konsumen, order &amp; pengiriman toko Anda</p>
         <div className="field">
           <label>Email</label>
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
