@@ -5,6 +5,7 @@ import { query } from '../../db/pool';
 import { config } from '../../config';
 import { asyncHandler, ok, created, errors } from '../../utils/http';
 import { priceForQty } from '../../utils/pricing';
+import { createCharge } from '../../utils/paymentGateway';
 
 /** Best-effort: ambil konsumen_auth.id dari token konsumen bila dikirim (login opsional). */
 function konsumenIdFrom(req: any): string | null {
@@ -41,6 +42,18 @@ router.get(
               stok_saat_ini, harga_het, harga_s1, harga_s2, harga_s3, harga_s4, harga_jual
        FROM barang ${whereSql} ORDER BY kategori, nama_barang`,
       params
+    );
+    ok(res, r.rows);
+  })
+);
+
+// GET /api/public/catalog/payment-methods — metode pembayaran aktif (publik)
+router.get(
+  '/payment-methods',
+  asyncHandler(async (_req, res) => {
+    const r = await query(
+      `SELECT kode, label, deskripsi, is_primary, butuh_gateway
+       FROM payment_methods WHERE enabled = true ORDER BY urutan`
     );
     ok(res, r.rows);
   })
@@ -90,7 +103,13 @@ router.post(
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, total, status, metode_bayar, created_at`,
       [d.nama, d.kontak_wa, d.alamat ?? null, d.catatan ?? null, JSON.stringify(items), total, d.metode_bayar, konsumenAuthId]
     );
-    created(res, { ...r.rows[0], items });
+    const pesanan = r.rows[0];
+    // Pembayaran non-tunai: minta charge ke gateway (stub aman bila belum dikonfigurasi).
+    let pembayaran = null;
+    if (d.metode_bayar !== 'cod') {
+      pembayaran = await createCharge({ orderId: pesanan.id, amount: total, method: d.metode_bayar, customer: { nama: d.nama, no_wa: d.kontak_wa } });
+    }
+    created(res, { ...pesanan, items, pembayaran });
   })
 );
 
