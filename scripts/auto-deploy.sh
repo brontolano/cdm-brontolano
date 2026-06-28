@@ -13,8 +13,13 @@ if [ "$LOCAL" != "$REMOTE" ]; then
   echo "$(date '+%F %T') Update terdeteksi ($LOCAL -> $REMOTE), deploy..."
   git pull --quiet origin main
   docker compose up -d --build
+  docker compose exec -T backend npm run migrate >/dev/null 2>&1 || true
   docker image prune -f >/dev/null 2>&1 || true
+  # Pastikan route Caddy CDM terpasang setelah (re)create container.
+  sh "$REPO_DIR/scripts/ensure-caddy-route.sh" >/dev/null 2>&1 || true
   echo "$(date '+%F %T') Deploy selesai."
 else
   echo "$(date '+%F %T') Tidak ada update."
 fi
+# Selalu pastikan route Caddy hidup (self-heal walau tak ada update kode).
+sh "$REPO_DIR/scripts/ensure-caddy-route.sh" >/dev/null 2>&1 || true
