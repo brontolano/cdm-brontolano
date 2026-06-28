@@ -1,11 +1,11 @@
 // Harga grosir berjenjang (tiered wholesale pricing) ala Brontolano.
 
 export interface TierPrices {
-  harga_het?: number | null; // 1-5
-  harga_s1?: number | null;  // 6-9
+  harga_het?: number | null; // 1-4
+  harga_s1?: number | null;  // 5-9
   harga_s2?: number | null;  // 10-24
-  harga_s3?: number | null;  // 25-150
-  harga_s4?: number | null;  // >150
+  harga_s3?: number | null;  // 25-49
+  harga_s4?: number | null;  // >=50
   harga_jual?: number | string | null; // fallback satuan
 }
 
@@ -19,10 +19,10 @@ export function priceForQty(b: TierPrices, qty: number): number {
   const fallback = num(b.harga_jual) ?? het ?? s1 ?? s2 ?? s3 ?? s4 ?? 0;
 
   let chosen: number | null = null;
-  if (qty >= 151) chosen = s4;
+  if (qty >= 50) chosen = s4;
   else if (qty >= 25) chosen = s3;
   else if (qty >= 10) chosen = s2;
-  else if (qty >= 6) chosen = s1;
+  else if (qty >= 5) chosen = s1;
   else chosen = het;
 
   // Jika tier yang dipilih kosong, cari tier terdekat yang terisi (dari atas ke bawah).

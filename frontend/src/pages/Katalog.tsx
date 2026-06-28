@@ -37,7 +37,7 @@ const TRUST = [
 // Ikon per kode metode (label/aktif datang dari API admin-configurable).
 const PAY_ICON: Record<string, typeof HandCoins> = { cod: HandCoins, qris: QrCode, transfer: Building2, va: Landmark, card: CreditCard };
 interface PayMethod { kode: string; label: string; deskripsi: string; is_primary: boolean; butuh_gateway: boolean; }
-const LADDER: [string, string][] = [['HET', '1–5'], ['S1', '6–9'], ['S2', '10–24'], ['S3', '25–150'], ['S4', '>150']];
+const LADDER: [string, string][] = [['HET', '1–4'], ['S1', '5–9'], ['S2', '10–24'], ['S3', '25–49'], ['S4', '≥50']];
 
 // Timeline status pesanan: dikonfirmasi → disiapkan → dikirim → selesai.
 const FLOW = [
@@ -270,6 +270,7 @@ export default function Katalog() {
                   price={harga} wasPrice={saving > 0 ? base : null} saving={saving > 0 ? saving : 0}
                   hotTier={saving > 0 ? tierInfo(qd).key : null}
                   perPcs={hargaPcs(p, harga)} isi={pcsPerKarton(p)} lowestPrice={floor}
+                  priceUnit={p.type_kemasan || 'karton'} pcsUnit="pcs"
                   qty={qty} onQty={(q) => setQty(p.id, q)} />
               );
             })}
@@ -310,7 +311,7 @@ export default function Katalog() {
                   <div className="cat__cartrow" key={i.p.id}>
                     <div className="cat__cartinfo">
                       <div className="cat__cartname">{i.p.nama_barang}</div>
-                      <div className="cat__carttier">{rupiah(i.harga)} /karton · Tier {tierInfo(i.qty).key}</div>
+                      <div className="cat__carttier">{rupiah(i.harga)} /{i.p.type_kemasan || 'karton'} · Tier {tierInfo(i.qty).key}</div>
                     </div>
                     <QtyStepper value={i.qty} onChange={(q) => setQty(i.p.id, q)} size="sm" />
                     <div className="cat__cartsub">{rupiah(i.subtotal)}</div>

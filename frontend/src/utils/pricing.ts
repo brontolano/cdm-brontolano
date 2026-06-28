@@ -14,15 +14,15 @@ function n(v: unknown): number | null {
   return Number.isFinite(x) ? x : null;
 }
 
-/** Pilih harga sesuai jumlah beli (1-5 HET, 6-9 S1, 10-24 S2, 25-150 S3, >150 S4). */
+/** Pilih harga sesuai jumlah beli (HET 1-4, S1 5-9, S2 10-24, S3 25-49, S4 ≥50). */
 export function priceForQty(b: Tiers, qty: number): number {
   const het = n(b.harga_het), s1 = n(b.harga_s1), s2 = n(b.harga_s2), s3 = n(b.harga_s3), s4 = n(b.harga_s4);
   const fallback = n(b.harga_jual) ?? het ?? s1 ?? s2 ?? s3 ?? s4 ?? 0;
   let chosen: number | null;
-  if (qty >= 151) chosen = s4;
+  if (qty >= 50) chosen = s4;
   else if (qty >= 25) chosen = s3;
   else if (qty >= 10) chosen = s2;
-  else if (qty >= 6) chosen = s1;
+  else if (qty >= 5) chosen = s1;
   else chosen = het;
   return chosen ?? s4 ?? s3 ?? s2 ?? s1 ?? het ?? fallback;
 }
@@ -34,11 +34,11 @@ export function hargaMulai(b: Tiers): number {
 
 /** Info tier untuk jumlah (karton) tertentu: kode + rentang qty. */
 export function tierInfo(qty: number): { key: string; range: string } {
-  if (qty >= 151) return { key: 'S4', range: '>150' };
-  if (qty >= 25) return { key: 'S3', range: '25–150' };
+  if (qty >= 50) return { key: 'S4', range: '≥50' };
+  if (qty >= 25) return { key: 'S3', range: '25–49' };
   if (qty >= 10) return { key: 'S2', range: '10–24' };
-  if (qty >= 6) return { key: 'S1', range: '6–9' };
-  return { key: 'HET', range: '1–5' };
+  if (qty >= 5) return { key: 'S1', range: '5–9' };
+  return { key: 'HET', range: '1–4' };
 }
 
 const rpFmt = (v: number) => 'Rp' + Math.round(v).toLocaleString('id-ID');

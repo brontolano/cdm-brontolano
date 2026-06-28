@@ -37,6 +37,8 @@ export interface ProductCardProps extends React.HTMLAttributes<HTMLDivElement> {
   wasPrice?: number | null;
   saving?: number;
   lowestPrice?: number | null; // harga termurah (tier S4) untuk anchor "terkesan murah"
+  priceUnit?: string;          // satuan grosir setelah harga (mis. karton/dus/pak)
+  pcsUnit?: string;            // satuan kecil untuk harga per-isi (mis. pcs/sachet)
   qty?: number;
   onQty?: (v: number) => void;
 }
@@ -45,7 +47,8 @@ export interface ProductCardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function ProductCard({
   name, sku = '', size = '', category = '', image = null,
   price, perPcs = null, isi = null, hotTier = null,
-  wasPrice = null, saving = 0, lowestPrice = null, qty = 0, onQty, className = '', ...rest
+  wasPrice = null, saving = 0, lowestPrice = null, priceUnit = 'karton', pcsUnit = 'pcs',
+  qty = 0, onQty, className = '', ...rest
 }: ProductCardProps) {
   return (
     <div className={['ds-product', className].filter(Boolean).join(' ')} {...rest}>
@@ -54,15 +57,18 @@ export function ProductCard({
         {category && <span className="ds-product__cat">{category}</span>}
         {hotTier && <span className="ds-product__hot">Tier {hotTier} 🔥</span>}
         {lowestPrice != null && lowestPrice < price && (
-          <span className="ds-product__floortag"><small>SEMURAH</small>{rupiah(lowestPrice)}<i>/krtn</i></span>
+          <div className="ds-product__floorbanner">
+            <span className="ds-product__floorlabel">🔥 TERMURAH</span>
+            <span className="ds-product__floorprice">{rupiah(lowestPrice)}<i>/{priceUnit}</i></span>
+          </div>
         )}
       </div>
       <div className="ds-product__body">
         <div className="ds-product__name">{name}</div>
         <div className="ds-product__sku">{sku}{size ? ` · ${size}` : ''}</div>
-        <div className="ds-product__price">{rupiah(price)} <span className="u">/karton</span>{wasPrice && wasPrice > price ? <span className="was">{rupiah(wasPrice)}</span> : null}</div>
-        {perPcs != null && <div className="ds-product__pcs">≈ {rupiah(perPcs)} /pcs{isi ? ` · isi ${isi}` : ''}</div>}
-        {saving > 0 && <div className="ds-product__save">Hemat {rupiah(saving)}/karton</div>}
+        <div className="ds-product__price">{rupiah(price)} <span className="u">/{priceUnit}</span>{wasPrice && wasPrice > price ? <span className="was">{rupiah(wasPrice)}</span> : null}</div>
+        {perPcs != null && <div className="ds-product__pcs">≈ {rupiah(perPcs)} /{pcsUnit}{isi ? ` · isi ${isi}` : ''}</div>}
+        {saving > 0 && <div className="ds-product__save">Hemat {rupiah(saving)}/{priceUnit}</div>}
         {qty === 0
           ? <button className="ds-product__add" onClick={() => onQty && onQty(1)}>+ Keranjang</button>
           : <div style={{ marginTop: 6 }}><QtyStepper value={qty} onChange={onQty} block /></div>}

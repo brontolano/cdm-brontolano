@@ -5,11 +5,11 @@ const B = { harga_het: 244757, harga_s1: 242361, harga_s2: 239940, harga_s3: 237
 
 describe('priceForQty (tier grosir)', () => {
   it('memilih tier sesuai jumlah', () => {
-    expect(priceForQty(B, 3)).toBe(244757); // HET 1-5
-    expect(priceForQty(B, 7)).toBe(242361); // S1 6-9
+    expect(priceForQty(B, 3)).toBe(244757); // HET 1-4
+    expect(priceForQty(B, 7)).toBe(242361); // S1 5-9
     expect(priceForQty(B, 10)).toBe(239940); // S2 10-24
-    expect(priceForQty(B, 30)).toBe(237495); // S3 25-150
-    expect(priceForQty(B, 200)).toBe(235000); // S4 >150
+    expect(priceForQty(B, 30)).toBe(237495); // S3 25-49
+    expect(priceForQty(B, 200)).toBe(235000); // S4 >=50
   });
   it('fallback ke tier terisi bila tier terpilih kosong', () => {
     expect(priceForQty({ harga_het: 1000 }, 50)).toBe(1000); // S3 null -> mundur

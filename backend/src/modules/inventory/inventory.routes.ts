@@ -11,7 +11,7 @@ router.use(authenticate);
 // Kolom CSV standar untuk import / export / template.
 const CSV_HEADERS = [
   'URL Image', 'SKU', 'Kategori', 'Nama Barang', 'Ukuran', 'Type', 'Karton', 'Pcs', 'Stock',
-  'HET 1-5', 'S1 6-9', 'S2 10-24', 'S3 25-150', 'S4 >150',
+  'HET 1-4', 'S1 5-9', 'S2 10-24', 'S3 25-49', 'S4 >=50',
 ];
 
 /** Escape satu nilai untuk baris CSV. */

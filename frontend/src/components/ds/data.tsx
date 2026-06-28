@@ -30,7 +30,7 @@ export function StatusBadge({ status, children, className = '', ...rest }: Statu
   );
 }
 
-const TIER_RANGES: Record<string, string> = { HET: '1–5', S1: '6–9', S2: '10–24', S3: '25–150', S4: '>150' };
+const TIER_RANGES: Record<string, string> = { HET: '1–4', S1: '5–9', S2: '10–24', S3: '25–49', S4: '≥50' };
 
 export interface TierBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   tier?: string;

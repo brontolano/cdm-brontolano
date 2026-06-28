@@ -297,11 +297,11 @@ export default function Inventory() {
             </div>
             <label style={{ fontSize: 13, fontWeight: 600 }}>Harga grosir berjenjang (per qty)</label>
             <div className="row" style={{ gap: 6 }}>
-              <div className="field"><label style={{ fontWeight: 400 }}>HET 1-5</label><input type="number" value={form.harga_het ?? ''} onChange={(e) => setForm({ ...form, harga_het: e.target.value === '' ? null : Number(e.target.value) })} /></div>
-              <div className="field"><label style={{ fontWeight: 400 }}>S1 6-9</label><input type="number" value={form.harga_s1 ?? ''} onChange={(e) => setForm({ ...form, harga_s1: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label style={{ fontWeight: 400 }}>HET 1-4</label><input type="number" value={form.harga_het ?? ''} onChange={(e) => setForm({ ...form, harga_het: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label style={{ fontWeight: 400 }}>S1 5-9</label><input type="number" value={form.harga_s1 ?? ''} onChange={(e) => setForm({ ...form, harga_s1: e.target.value === '' ? null : Number(e.target.value) })} /></div>
               <div className="field"><label style={{ fontWeight: 400 }}>S2 10-24</label><input type="number" value={form.harga_s2 ?? ''} onChange={(e) => setForm({ ...form, harga_s2: e.target.value === '' ? null : Number(e.target.value) })} /></div>
-              <div className="field"><label style={{ fontWeight: 400 }}>S3 25-150</label><input type="number" value={form.harga_s3 ?? ''} onChange={(e) => setForm({ ...form, harga_s3: e.target.value === '' ? null : Number(e.target.value) })} /></div>
-              <div className="field"><label style={{ fontWeight: 400 }}>S4 &gt;150</label><input type="number" value={form.harga_s4 ?? ''} onChange={(e) => setForm({ ...form, harga_s4: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label style={{ fontWeight: 400 }}>S3 25-49</label><input type="number" value={form.harga_s3 ?? ''} onChange={(e) => setForm({ ...form, harga_s3: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+              <div className="field"><label style={{ fontWeight: 400 }}>S4 ≥50</label><input type="number" value={form.harga_s4 ?? ''} onChange={(e) => setForm({ ...form, harga_s4: e.target.value === '' ? null : Number(e.target.value) })} /></div>
             </div>
             <input type="hidden" value={form.harga_jual} />
             <div className="row">
