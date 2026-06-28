@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, LayoutGrid, ChevronDown, X, Check, Download, User, UserRound, Settings, HandCoins, QrCode, Building2, Landmark, CreditCard, BadgePercent, Truck, MessageCircle, ChevronRight, Phone, LogOut, ClipboardCheck, Package, PartyPopper } from 'lucide-react';
+import { Search, LayoutGrid, ChevronDown, X, Check, Download, User, UserRound, Settings, HandCoins, QrCode, Building2, Landmark, CreditCard, BadgePercent, Truck, MessageCircle, ChevronRight, Phone, LogOut, ClipboardCheck, Package, PartyPopper, Pencil, MapPin } from 'lucide-react';
+import { fileToCompressedDataUrl } from '../utils/image';
 import { api } from '../api/client';
 import { priceForQty, tierInfo } from '../utils/pricing';
 import { rupiah } from '../components/ui';
@@ -72,6 +73,8 @@ export default function Katalog() {
   const [acctOpen, setAcctOpen] = useState(false);
   const [orders, setOrders] = useState<KonsumenOrder[]>([]);
   const [detail, setDetail] = useState<KonsumenOrder | null>(null);
+  const [editProfile, setEditProfile] = useState<any | null>(null); // form data | null
+  const [savingProfile, setSavingProfile] = useState(false);
   const installEvt = useRef<any>(null);
   const [canInstall, setCanInstall] = useState(false);
 
@@ -123,6 +126,35 @@ export default function Katalog() {
   }
   async function openAccount() { setOrders(await kauth.fetchOrders()); setAcctOpen(true); }
   function logoutKonsumen() { kauth.clearToken(); setUser(null); setAcctOpen(false); }
+  async function openEditProfile() {
+    const p = await kauth.fetchProfile();
+    setEditProfile({
+      nama: p?.akun_nama || user?.nama || '',
+      nama_toko: p?.nama_toko || '', alamat_lengkap: (p?.alamat_lengkap && !p.alamat_lengkap.startsWith('Belum diisi')) ? p.alamat_lengkap : '',
+      kota: p?.kota || '', latitude: p?.latitude ?? null, longitude: p?.longitude ?? null,
+      foto_toko: p?.foto_toko || null, foto_ktp: p?.foto_ktp || null,
+    });
+    setAcctOpen(false);
+  }
+  async function pickProfilFoto(e: React.ChangeEvent<HTMLInputElement>, key: 'foto_toko' | 'foto_ktp') {
+    const file = e.target.files?.[0]; e.target.value = '';
+    if (!file) return;
+    try { const url = await fileToCompressedDataUrl(file, 800, 0.7); setEditProfile((f: any) => ({ ...f, [key]: url })); } catch { /* abaikan */ }
+  }
+  function lokasiSaya() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => setEditProfile((f: any) => ({ ...f, latitude: pos.coords.latitude, longitude: pos.coords.longitude })), () => {});
+  }
+  async function saveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      const u = await kauth.updateProfile(editProfile);
+      if (u?.akun_nama) setUser((prev) => prev ? { ...prev, nama: u.akun_nama } : prev);
+      setEditProfile(null);
+    } catch { /* pesan via UI minimal */ }
+    finally { setSavingProfile(false); }
+  }
 
   function setQty(id: string, qty: number) {
     setCart((c) => { const n = { ...c }; if (qty <= 0) delete n[id]; else n[id] = qty; return n; });
@@ -168,7 +200,7 @@ export default function Katalog() {
   }
 
   const catLabel = kategori || 'Semua Kategori';
-  const barVisible = totalQty > 0 && sheet === null && !catOpen && !auth && !acctOpen && !detail;
+  const barVisible = totalQty > 0 && sheet === null && !catOpen && !auth && !acctOpen && !detail && !editProfile;
 
   return (
     <div className="cat">
@@ -417,9 +449,60 @@ export default function Katalog() {
                     </button>
                   ))}
               </div>
+              <button className="cat__loginbar" style={{ marginTop: 8 }} onClick={openEditProfile}>
+                <Pencil size={18} aria-hidden />
+                <span>Lengkapi / ubah data toko &amp; alamat</span>
+                <ChevronRight size={16} aria-hidden />
+              </button>
               <button className="cat__logout" onClick={logoutKonsumen}><LogOut size={16} aria-hidden /> Keluar</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Edit profil konsumen (data toko & alamat) */}
+      {editProfile && (
+        <div className="cat__overlay" onClick={() => setEditProfile(null)}>
+          <form className="cat__sheet" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '92vh' }} onSubmit={saveProfile}>
+            <div className="cat__handle" />
+            <div className="cat__sheet-head"><strong>Data Toko Saya</strong><button type="button" className="cat__x" onClick={() => setEditProfile(null)} aria-label="Tutup"><X size={18} /></button></div>
+            <div className="cat__sheet-body">
+              <div className="cat__authlede">Lengkapi data agar pesanan lebih cepat diproses & ongkir akurat.</div>
+              <div className="ds-field"><label className="ds-field__label">Nama</label>
+                <input className="ds-field__control" value={editProfile.nama} onChange={(e) => setEditProfile({ ...editProfile, nama: e.target.value })} placeholder="Nama Anda" /></div>
+              <div className="ds-field"><label className="ds-field__label">Nama Toko</label>
+                <input className="ds-field__control" value={editProfile.nama_toko} onChange={(e) => setEditProfile({ ...editProfile, nama_toko: e.target.value })} placeholder="mis. Warung Bu Ani" /></div>
+              <div className="ds-field"><label className="ds-field__label">Alamat Lengkap</label>
+                <input className="ds-field__control" value={editProfile.alamat_lengkap} onChange={(e) => setEditProfile({ ...editProfile, alamat_lengkap: e.target.value })} placeholder="Jl. / patokan" /></div>
+              <div className="ds-field"><label className="ds-field__label">Kota</label>
+                <input className="ds-field__control" value={editProfile.kota} onChange={(e) => setEditProfile({ ...editProfile, kota: e.target.value })} placeholder="mis. Soreang" /></div>
+              <div className="ds-field">
+                <label className="ds-field__label">Lokasi GPS (opsional)</label>
+                <button type="button" className="cat__loginbar" onClick={lokasiSaya}>
+                  <MapPin size={18} aria-hidden />
+                  <span>{editProfile.latitude != null ? `Tersimpan: ${Number(editProfile.latitude).toFixed(4)}, ${Number(editProfile.longitude).toFixed(4)}` : 'Gunakan lokasi saya'}</span>
+                  <ChevronRight size={16} aria-hidden />
+                </button>
+              </div>
+              <div className="cat__formsec">Foto (opsional)</div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                {(['foto_toko', 'foto_ktp'] as const).map((key) => (
+                  <div key={key} style={{ flex: 1 }}>
+                    <div className="ds-field__label" style={{ marginBottom: 4 }}>{key === 'foto_toko' ? 'Foto Toko' : 'Foto KTP'}</div>
+                    {editProfile[key]
+                      ? <div style={{ position: 'relative' }}>
+                          <img src={editProfile[key]} alt="" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border)' }} />
+                          <button type="button" aria-label="Hapus foto" onClick={() => setEditProfile({ ...editProfile, [key]: null })} style={{ position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'var(--danger)', color: '#fff', cursor: 'pointer' }}>×</button>
+                        </div>
+                      : <label className="cat__catbtn" style={{ width: '100%', justifyContent: 'center', cursor: 'pointer' }}>📷 Pilih<input type="file" accept="image/*" capture="environment" hidden onChange={(e) => pickProfilFoto(e, key)} /></label>}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="cat__sheet-foot">
+              <Button variant="commerce" size="lg" block type="submit" disabled={savingProfile}>{savingProfile ? 'Menyimpan…' : 'Simpan Data'}</Button>
+            </div>
+          </form>
         </div>
       )}
 

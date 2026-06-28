@@ -41,3 +41,17 @@ export async function fetchOrders(): Promise<KonsumenOrder[]> {
   try { return (await katalogApi.get('/konsumen-auth/orders')).data.data as KonsumenOrder[]; }
   catch { return []; }
 }
+
+export interface KonsumenProfile {
+  akun_nama: string; no_wa: string; konsumen_id: string | null;
+  nama_toko: string | null; nama_pemilik: string | null; alamat_lengkap: string | null;
+  kota: string | null; latitude: number | null; longitude: number | null;
+  foto_toko: string | null; foto_ktp: string | null;
+}
+export async function fetchProfile(): Promise<KonsumenProfile | null> {
+  try { return (await katalogApi.get('/konsumen-auth/profile')).data.data as KonsumenProfile; }
+  catch { return null; }
+}
+export async function updateProfile(d: Partial<KonsumenProfile> & { nama?: string }): Promise<KonsumenProfile> {
+  return (await katalogApi.put('/konsumen-auth/profile', d)).data.data as KonsumenProfile;
+}

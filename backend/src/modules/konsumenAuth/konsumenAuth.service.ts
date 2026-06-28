@@ -77,6 +77,56 @@ export async function login(no_wa_input: string, password: string) {
   return { user, token: signToken(user) };
 }
 
+export interface ProfileInput {
+  nama?: string; nama_toko?: string; alamat_lengkap?: string; kota?: string;
+  latitude?: number | null; longitude?: number | null; foto_toko?: string | null; foto_ktp?: string | null;
+}
+
+/** Profil konsumen (akun + record konsumen tertaut) untuk prefill form Akun Saya. */
+export async function getProfile(kid: string) {
+  const r = await query(
+    `SELECT ka.nama AS akun_nama, ka.no_wa,
+            k.id AS konsumen_id, k.nama_toko, k.nama_pemilik, k.alamat_lengkap, k.kota,
+            k.latitude, k.longitude, k.foto_toko, k.foto_ktp
+     FROM konsumen_auth ka LEFT JOIN konsumen k ON k.id = ka.konsumen_id WHERE ka.id=$1`,
+    [kid]
+  );
+  return r.rows[0] || null;
+}
+
+/** Update profil konsumen dari PWA katalog → memperbarui record konsumen tertaut. */
+export async function updateProfile(kid: string, no_wa: string, d: ProfileInput) {
+  const ka = await query<{ konsumen_id: string | null; nama: string }>('SELECT konsumen_id, nama FROM konsumen_auth WHERE id=$1', [kid]);
+  if (!ka.rowCount) throw errors.notFound('Akun tidak ditemukan');
+  let konsumenId = ka.rows[0].konsumen_id;
+  const nama = (d.nama && d.nama.trim()) || ka.rows[0].nama;
+  if (!konsumenId) {
+    const ins = await query<{ id: string }>(
+      `INSERT INTO konsumen (nama_toko, nama_pemilik, kontak_wa, alamat_lengkap, status)
+       VALUES ($1,$2,$3,$4,'aktif') RETURNING id`,
+      [d.nama_toko || nama, nama, no_wa, d.alamat_lengkap || 'Belum diisi (daftar via katalog)']
+    );
+    konsumenId = ins.rows[0].id;
+    await query('UPDATE konsumen_auth SET konsumen_id=$1 WHERE id=$2', [konsumenId, kid]);
+  }
+  await query(
+    `UPDATE konsumen SET
+       nama_toko = COALESCE(NULLIF($1,''), nama_toko),
+       nama_pemilik = $2,
+       alamat_lengkap = COALESCE(NULLIF($3,''), alamat_lengkap),
+       kota = COALESCE($4, kota),
+       latitude = COALESCE($5, latitude),
+       longitude = COALESCE($6, longitude),
+       foto_toko = COALESCE($7, foto_toko),
+       foto_ktp = COALESCE($8, foto_ktp),
+       updated_at = now()
+     WHERE id=$9`,
+    [d.nama_toko ?? null, nama, d.alamat_lengkap ?? null, d.kota ?? null, d.latitude ?? null, d.longitude ?? null, d.foto_toko ?? null, d.foto_ktp ?? null, konsumenId]
+  );
+  if (d.nama && d.nama.trim()) await query('UPDATE konsumen_auth SET nama=$1, updated_at=now() WHERE id=$2', [d.nama.trim(), kid]);
+  return getProfile(kid);
+}
+
 /** Riwayat pesanan katalog milik konsumen (dicocokkan via konsumen_auth_id atau no_wa). */
 export async function listOrders(kid: string, no_wa: string) {
   const res = await query(

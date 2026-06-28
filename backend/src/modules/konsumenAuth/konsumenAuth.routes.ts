@@ -45,4 +45,24 @@ router.get('/orders', authenticateKonsumen, asyncHandler(async (req, res) => {
   ok(res, await service.listOrders(k.kid, k.no_wa));
 }));
 
+router.get('/profile', authenticateKonsumen, asyncHandler(async (req, res) => {
+  const k = (req as any).konsumen as KonsumenAuthUser;
+  ok(res, await service.getProfile(k.kid));
+}));
+
+router.put('/profile', authenticateKonsumen, asyncHandler(async (req, res) => {
+  const k = (req as any).konsumen as KonsumenAuthUser;
+  const d = z.object({
+    nama: z.string().min(1).max(120).optional(),
+    nama_toko: z.string().max(100).optional(),
+    alamat_lengkap: z.string().max(500).optional(),
+    kota: z.string().max(100).optional(),
+    latitude: z.number().min(-90).max(90).nullable().optional(),
+    longitude: z.number().min(-180).max(180).nullable().optional(),
+    foto_toko: z.string().nullable().optional(),
+    foto_ktp: z.string().nullable().optional(),
+  }).parse(req.body);
+  ok(res, await service.updateProfile(k.kid, k.no_wa, d));
+}));
+
 export default router;
