@@ -1,5 +1,5 @@
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, Inbox, ReceiptText, Banknote, Truck, MessageCircle, Users as UsersIcon, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Store, Package, Inbox, ReceiptText, Banknote, Truck, MessageCircle, Users as UsersIcon, LogOut, type LucideIcon } from 'lucide-react';
 import { useAuth, Role } from './store/auth';
 import { Spinner } from './components/ui';
 import Login from './pages/Login';
@@ -72,7 +72,8 @@ function Layout({ children }: { children: React.ReactNode }) {
             <strong>{user.nama_lengkap}</strong> <span className="role-badge">{user.role}</span>
           </div>
           <button className="btn secondary small" onClick={logout}>
-            Keluar
+            <LogOut size={15} strokeWidth={2} aria-hidden />
+            <span>Keluar</span>
           </button>
         </header>
         <main className="content">{children}</main>
