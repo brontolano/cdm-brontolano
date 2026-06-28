@@ -51,11 +51,13 @@ export default function Dashboard() {
 
   if (!summary) return <Spinner />;
 
-  const cards: { label: string; value: any; icon: LucideIcon; accent?: boolean }[] = [
+  const deltaProps = (pct: number | null | undefined) =>
+    pct == null ? {} : { delta: `${Math.abs(pct)}%`, deltaDir: (pct >= 0 ? 'up' : 'down') as 'up' | 'down' };
+  const cards: { label: string; value: any; icon: LucideIcon; accent?: boolean; delta?: string; deltaDir?: 'up' | 'down' }[] = [
     { label: 'Konsumen Aktif', value: summary.total_konsumen, icon: Store },
     { label: 'Total Order', value: summary.total_orders, icon: ReceiptText },
-    { label: 'Omset Bulan Ini', value: rupiah(summary.omset_bulan_ini), icon: TrendingUp, accent: true },
-    { label: 'Laba Kotor Bln Ini', value: rupiah(summary.laba_bulan_ini || 0), icon: HandCoins },
+    { label: 'Omset Bulan Ini', value: rupiah(summary.omset_bulan_ini), icon: TrendingUp, accent: true, ...deltaProps(summary.omset_delta_pct) },
+    { label: 'Laba Kotor Bln Ini', value: rupiah(summary.laba_bulan_ini || 0), icon: HandCoins, ...deltaProps(summary.laba_delta_pct) },
     { label: 'Pengeluaran Bln Ini', value: <span style={{ color: 'var(--danger)' }}>{rupiah(summary.pengeluaran_bulan_ini || 0)}</span>, icon: Coins },
     { label: 'Laba Bersih Bln Ini', value: <span style={{ color: (summary.laba_bersih_bulan_ini || 0) >= 0 ? 'var(--green-600)' : 'var(--danger)' }}>{rupiah(summary.laba_bersih_bulan_ini || 0)}</span>, icon: Wallet, accent: true },
     { label: 'Piutang', value: rupiah(summary.total_piutang), icon: Hourglass },
@@ -71,7 +73,7 @@ export default function Dashboard() {
       <div className="statgrid">
         {cards.map((c) => {
           const Icon = c.icon;
-          return <StatCard key={c.label} label={c.label} value={c.value} accent={c.accent} icon={<Icon size={18} />} />;
+          return <StatCard key={c.label} label={c.label} value={c.value} accent={c.accent} delta={c.delta} deltaDir={c.deltaDir} icon={<Icon size={18} />} />;
         })}
       </div>
 

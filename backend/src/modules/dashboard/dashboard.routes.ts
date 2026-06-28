@@ -10,7 +10,7 @@ router.use(authenticate);
 router.get(
   '/summary',
   asyncHandler(async (_req, res) => {
-    const [konsumen, orders, omsetBulan, lowStock, piutang, labaBulan, pengeluaranBulan] = await Promise.all([
+    const [konsumen, orders, omsetBulan, lowStock, piutang, labaBulan, pengeluaranBulan, omsetBulanLalu, labaBulanLalu] = await Promise.all([
       query<{ count: string }>(`SELECT COUNT(*) FROM konsumen WHERE status='aktif'`),
       query<{ count: string }>(`SELECT COUNT(*) FROM orders WHERE status NOT IN ('dibatalkan')`),
       query<{ sum: string }>(
@@ -31,18 +31,37 @@ router.get(
         `SELECT COALESCE(SUM(jumlah),0) AS sum FROM pengeluaran
          WHERE date_trunc('month', tanggal) = date_trunc('month', CURRENT_DATE)`
       ),
+      // Bulan lalu — untuk delta naik/turun (MoM) pada StatCard
+      query<{ sum: string }>(
+        `SELECT COALESCE(SUM(total),0) AS sum FROM invoices WHERE status_pembayaran='lunas'
+         AND date_trunc('month', tanggal_invoice) = date_trunc('month', CURRENT_DATE - INTERVAL '1 month')`
+      ),
+      query<{ sum: string }>(
+        `SELECT COALESCE(SUM(oi.subtotal - b.hpp * oi.jumlah),0) AS sum
+         FROM order_items oi JOIN barang b ON b.id=oi.barang_id JOIN orders o ON o.id=oi.order_id
+         WHERE o.status NOT IN ('dibatalkan','draft')
+         AND date_trunc('month', o.tanggal_order) = date_trunc('month', CURRENT_DATE - INTERVAL '1 month')`
+      ),
     ]);
     const laba = Number(labaBulan.rows[0].sum);
     const pengeluaran = Number(pengeluaranBulan.rows[0].sum);
+    const omset = Number(omsetBulan.rows[0].sum);
+    const omsetLalu = Number(omsetBulanLalu.rows[0].sum);
+    const labaLalu = Number(labaBulanLalu.rows[0].sum);
+    // delta% MoM (null bila tak ada pembanding agar UI bisa menyembunyikan)
+    const pct = (kini: number, lalu: number): number | null =>
+      lalu > 0 ? Math.round(((kini - lalu) / lalu) * 100) : (kini > 0 ? 100 : null);
     ok(res, {
       total_konsumen: Number(konsumen.rows[0].count),
       total_orders: Number(orders.rows[0].count),
-      omset_bulan_ini: Number(omsetBulan.rows[0].sum),
+      omset_bulan_ini: omset,
       laba_bulan_ini: laba,
       pengeluaran_bulan_ini: pengeluaran,
       laba_bersih_bulan_ini: laba - pengeluaran,
       barang_stok_rendah: Number(lowStock.rows[0].count),
       total_piutang: Number(piutang.rows[0].sum),
+      omset_delta_pct: pct(omset, omsetLalu),
+      laba_delta_pct: pct(laba, labaLalu),
     });
   })
 );
