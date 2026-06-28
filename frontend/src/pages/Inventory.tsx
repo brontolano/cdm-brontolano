@@ -49,6 +49,19 @@ export default function Inventory() {
   const [masuk, setMasuk] = useState<{ barang: Barang; jumlah: number; keterangan: string } | null>(null);
   const [opname, setOpname] = useState<{ barang: Barang; stok_baru: number; keterangan: string } | null>(null);
   const [history, setHistory] = useState<{ barang: Barang; rows: any[] } | null>(null);
+  const [search, setSearch] = useState('');
+  const [kategori, setKategori] = useState('');
+  const [lowOnly, setLowOnly] = useState(false);
+
+  const kategoriList = Array.from(new Set(list.map((b) => b.kategori).filter(Boolean))) as string[];
+  const filtered = list.filter((b) => {
+    const q = search.trim().toLowerCase();
+    if (q && !(`${b.nama_barang} ${b.sku || ''}`.toLowerCase().includes(q))) return false;
+    if (kategori && b.kategori !== kategori) return false;
+    if (lowOnly && !(b.stok_saat_ini < b.stok_minimum)) return false;
+    return true;
+  });
+  const lowCount = list.filter((b) => b.stok_saat_ini < b.stok_minimum).length;
 
   async function load() {
     setLoading(true);
@@ -203,12 +216,23 @@ export default function Inventory() {
         </div>
       </div>
 
+      <div className="toolbar" style={{ alignItems: 'flex-start' }}>
+        <div className="chips-row">
+          <button className={'chip' + (kategori === '' && !lowOnly ? ' is-active' : '')} onClick={() => { setKategori(''); setLowOnly(false); }}>Semua</button>
+          {kategoriList.map((k) => (
+            <button key={k} className={'chip' + (kategori === k ? ' is-active' : '')} onClick={() => setKategori(kategori === k ? '' : k)}>{k}</button>
+          ))}
+          {lowCount > 0 && <button className={'chip is-warn' + (lowOnly ? ' is-active' : '')} onClick={() => setLowOnly((v) => !v)}>⚠️ Stok Rendah ({lowCount})</button>}
+        </div>
+        <input placeholder="Cari nama / SKU…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ padding: '8px 11px', borderRadius: 8, border: '1px solid var(--border)', minWidth: 200 }} />
+      </div>
+
       <div className="card" style={{ padding: 0 }}>
-        {loading ? <Spinner /> : list.length === 0 ? <EmptyState message="Belum ada barang." /> : (
+        {loading ? <Spinner /> : list.length === 0 ? <EmptyState message="Belum ada barang." /> : filtered.length === 0 ? <EmptyState message="Tidak ada barang cocok filter." /> : (
           <table>
             <thead><tr><th>Foto</th><th>SKU</th><th>Barang</th><th>Kategori</th><th>Harga grosir (HET→S4)</th><th>Stok</th><th>Min</th><th></th></tr></thead>
             <tbody>
-              {list.map((b) => (
+              {filtered.map((b) => (
                 <tr key={b.id} style={b.stok_saat_ini < b.stok_minimum ? { background: '#fef2f2' } : {}}>
                   <td>{b.gambar ? <img src={b.gambar} alt={b.nama_barang} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} /> : <span className="muted">—</span>}</td>
                   <td className="muted sku-code">{b.sku || '-'}</td>

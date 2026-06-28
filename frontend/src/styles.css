@@ -161,6 +161,12 @@ tbody tr:hover { background: var(--surface-hover); }
 .aging__row.is-warn strong { color: var(--warn-700); }
 .aging__row.is-bad, .aging__row.is-bad strong { color: var(--danger); }
 .tnum { font-variant-numeric: tabular-nums; }
+/* Chip filter (parity ui_kits/cdm-admin) */
+.chips-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chip { background: var(--surface-card); border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius-pill); padding: 6px 14px; font-size: 13px; font-weight: 600; font-family: var(--font-sans); cursor: pointer; transition: all var(--dur-fast); }
+.chip:hover { border-color: var(--border-strong); color: var(--text); }
+.chip.is-active { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+.chip.is-warn.is-active { background: var(--warn-500); border-color: var(--warn-500); }
 
 /* Misc */
 .muted { color: var(--muted); } .right { text-align: right; }
