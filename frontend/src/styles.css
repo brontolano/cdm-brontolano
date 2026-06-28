@@ -11,6 +11,7 @@
   --border: var(--slate-200);
   --text: var(--slate-900);
   --muted: var(--slate-500);
+  --content-max: 1200px;
 }
 * { box-sizing: border-box; }
 body { margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
@@ -42,6 +43,42 @@ td .sku, .sku-code { font-family: var(--font-mono); font-size: 12px; }
 .content { padding: 20px; }
 .content > * { max-width: var(--content-max); margin-left: auto; margin-right: auto; }
 .role-badge { background: var(--primary-soft); color: var(--primary-active); padding: 3px 10px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; }
+
+/* ===== CDM Admin shell (parity ui_kits/cdm-admin) ===== */
+.adm { display: flex; min-height: 100vh; }
+.adm__side { width: var(--sidebar-width); background: var(--slate-900); color: var(--slate-300); display: flex; flex-direction: column; padding: 16px 12px; position: sticky; top: 0; height: 100vh; flex-shrink: 0; }
+.adm__brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; }
+.adm__brand img { height: 30px; width: auto; }
+.adm__brandtext { display: flex; flex-direction: column; line-height: 1.2; }
+.adm__brandtext strong { color: #fff; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+.adm__brandtext span { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: var(--tracking-wide); font-weight: 600; }
+.adm__nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.adm__navitem { display: flex; align-items: center; gap: 11px; background: none; border: none; color: var(--slate-300); padding: 9px 12px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; font-family: var(--font-sans); cursor: pointer; text-align: left; text-decoration: none; transition: background var(--dur-fast), color var(--dur-fast); }
+.adm__navitem svg { color: var(--slate-400); flex-shrink: 0; }
+.adm__navitem:hover { background: var(--slate-800); color: #fff; }
+.adm__navitem.is-active { background: var(--brand-500); color: #fff; }
+.adm__navitem.is-active svg { color: #fff; }
+.adm__sidefoot { display: flex; align-items: center; gap: 11px; padding: 10px 12px; font-size: 13px; color: var(--slate-400); border-top: 1px solid var(--slate-800); margin-top: 8px; }
+.adm__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.adm__top { position: sticky; top: 0; z-index: var(--z-header); background: var(--surface-card); border-bottom: 1px solid var(--border); padding: 10px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.adm__search { display: flex; align-items: center; gap: 8px; background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; width: 340px; max-width: 40vw; }
+.adm__search svg { color: var(--text-subtle); flex-shrink: 0; }
+.adm__search input { border: none; background: none; outline: none; font-family: var(--font-sans); font-size: 14px; width: 100%; color: var(--text); }
+.adm__user { display: flex; align-items: center; gap: 14px; }
+.adm__icon { width: 38px; height: 38px; border: none; background: none; border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.adm__icon:hover { background: var(--surface-hover); }
+.adm__userbox { display: flex; align-items: center; gap: 10px; }
+.adm__avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--brand-500); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+.adm__usermeta { display: flex; flex-direction: column; line-height: 1.25; }
+.adm__usermeta strong { font-size: 14px; }
+.adm__role { font-size: 11px; font-weight: 600; color: var(--info-700); background: var(--info-50); padding: 1px 8px; border-radius: var(--radius-pill); width: fit-content; }
+.adm__content { padding: 22px; max-width: var(--content-max); width: 100%; margin: 0 auto; }
+@media (max-width: 768px) {
+  .adm__side { width: 64px; }
+  .adm__brandtext, .adm__navitem span, .adm__sidefoot span { display: none; }
+  .adm__search { width: 160px; }
+  .adm__usermeta { display: none; }
+}
 
 /* Cards */
 .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }

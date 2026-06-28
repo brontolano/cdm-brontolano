@@ -1,5 +1,5 @@
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, Inbox, ReceiptText, Banknote, Truck, MessageCircle, Users as UsersIcon, LogOut, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Store, Package, Inbox, ReceiptText, Banknote, Truck, MessageCircle, Users as UsersIcon, LogOut, Search, Bell, LifeBuoy, type LucideIcon } from 'lucide-react';
 import { useAuth, Role } from './store/auth';
 import { Spinner } from './components/ui';
 import Login from './pages/Login';
@@ -44,39 +44,51 @@ function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   if (!user) return null;
   const visible = MENU.filter((m) => !m.roles || m.roles.includes(user.role));
+  const initials = (user.nama_lengkap || 'U').split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('');
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/brontolano-mark.png" alt="" style={{ height: 24, width: 'auto' }} />
-          <span className="brand-wordmark">
-            Brontolano
-            <small>CDM Admin</small>
-          </span>
-        </h1>
-        <nav>
+    <div className="adm">
+      <aside className="adm__side">
+        <div className="adm__brand">
+          <img src="/brontolano-mark.png" alt="" onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
+          <div className="adm__brandtext">
+            <strong>Brontolano</strong>
+            <span>CDM Admin</span>
+          </div>
+        </div>
+        <nav className="adm__nav">
           {visible.map((m) => {
             const Icon = m.icon;
             return (
-              <NavLink key={m.path} to={m.path} end={m.path === '/'}>
+              <NavLink key={m.path} to={m.path} end={m.path === '/'} className={({ isActive }) => 'adm__navitem' + (isActive ? ' is-active' : '')}>
                 <Icon size={18} strokeWidth={2} aria-hidden />
                 <span>{m.label}</span>
               </NavLink>
             );
           })}
         </nav>
+        <div className="adm__sidefoot">
+          <LifeBuoy size={17} aria-hidden /><span>Bantuan</span>
+        </div>
       </aside>
-      <div className="main">
-        <header className="topbar">
-          <div>
-            <strong>{user.nama_lengkap}</strong> <span className="role-badge">{user.role}</span>
+      <div className="adm__main">
+        <header className="adm__top">
+          <div className="adm__search">
+            <Search size={16} aria-hidden />
+            <input placeholder="Cari konsumen, order, barang…" aria-label="Cari" />
           </div>
-          <button className="btn secondary small" onClick={logout}>
-            <LogOut size={15} strokeWidth={2} aria-hidden />
-            <span>Keluar</span>
-          </button>
+          <div className="adm__user">
+            <button className="adm__icon" aria-label="Notifikasi"><Bell size={19} aria-hidden /></button>
+            <div className="adm__userbox">
+              <div className="adm__avatar">{initials}</div>
+              <div className="adm__usermeta">
+                <strong>{user.nama_lengkap}</strong>
+                <span className="adm__role">{user.role}</span>
+              </div>
+            </div>
+            <button className="adm__icon" aria-label="Keluar" onClick={logout}><LogOut size={18} aria-hidden /></button>
+          </div>
         </header>
-        <main className="content">{children}</main>
+        <main className="adm__content">{children}</main>
       </div>
     </div>
   );
