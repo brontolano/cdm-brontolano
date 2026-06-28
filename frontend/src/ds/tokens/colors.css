@@ -1,0 +1,103 @@
+/* ============================================================
+   Brontolano — Color tokens
+   Brand mark = red crown ("Rojo" = king). Red is the identity.
+   Slate neutrals + green commerce accent come straight from the
+   live CDM/Katalog codebase. Values verified against the app.
+   ============================================================ */
+:root {
+  /* ---- Brontolano Red (brand / primary) ---- */
+  --brand-50:  #fff1f1;
+  --brand-100: #ffddde;
+  --brand-200: #ffc1c3;
+  --brand-300: #fb9598;
+  --brand-400: #f6515a;
+  --brand-500: #ed1c24;   /* brand base — the crown red */
+  --brand-600: #d11018;   /* primary hover */
+  --brand-700: #af0f16;   /* primary active */
+  --brand-800: #911218;
+  --brand-900: #78151a;
+
+  /* ---- Ink / Slate neutrals (Tailwind slate — matches app) ---- */
+  --slate-0:   #ffffff;
+  --slate-50:  #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;   /* admin sidebar / ink */
+  --ink-black: #000000;   /* public Katalog header */
+
+  /* ---- Commerce Green (Katalog CTA · savings · success) ---- */
+  --green-50:  #f0fdf4;
+  --green-100: #dcfce7;
+  --green-200: #bbf7d0;
+  --green-500: #16a34a;   /* "makin murah" / go / add-to-cart */
+  --green-600: #15803d;
+  --green-700: #166534;
+
+  /* ---- WhatsApp (functional — order & broadcast channel) ---- */
+  --wa-green:      #25d366;
+  --wa-green-dark: #1ebe57;
+
+  /* ---- Status / semantic hues ---- */
+  --info-50:  #dbeafe;  --info-500: #2563eb;  --info-700: #1d4ed8;
+  --warn-50:  #fef3c7;  --warn-500: #d97706;  --warn-700: #b45309;
+  --danger-50: #fee2e2; --danger-500: #dc2626; --danger-700: #b91c1c;
+  --violet-50: #ede9fe; --violet-700: #6d28d9;
+
+  /* =========================================================
+     SEMANTIC ALIASES — reach for these in components.
+     ========================================================= */
+  --surface-page:   var(--slate-100);
+  --surface-card:   var(--slate-0);
+  --surface-sunken: var(--slate-50);
+  --surface-ink:    var(--slate-900);   /* dark sidebar / panels */
+  --surface-black:  var(--ink-black);   /* catalog top bar */
+  --surface-hover:  var(--slate-100);
+
+  --border:         var(--slate-200);
+  --border-strong:  var(--slate-300);
+  --border-ink:     #1e293b;
+
+  --text:           var(--slate-900);
+  --text-muted:     var(--slate-500);
+  --text-subtle:    var(--slate-400);
+  --text-on-brand:  #ffffff;
+  --text-on-ink:    #cbd5e1;
+  --link:           var(--brand-600);
+
+  --primary:        var(--brand-500);
+  --primary-hover:  var(--brand-600);
+  --primary-active: var(--brand-700);
+  --primary-fg:     #ffffff;
+  --primary-soft:   var(--brand-50);
+
+  --commerce:       var(--green-500);
+  --commerce-hover: var(--green-600);
+  --commerce-soft:  var(--green-50);
+
+  --success:  var(--green-500);
+  --warning:  var(--warn-500);
+  --danger:   var(--danger-500);
+  --danger-hover: var(--danger-700);
+  --info:     var(--info-500);
+
+  --focus-ring: color-mix(in srgb, var(--brand-500) 38%, transparent);
+
+  /* ---- Status badge pairs (domain states, bg / fg) ---- */
+  --badge-draft-bg:     #e2e8f0; --badge-draft-fg:     #475569;
+  --badge-confirmed-bg: #dbeafe; --badge-confirmed-fg: #1d4ed8;
+  --badge-proses-bg:    #ede9fe; --badge-proses-fg:    #6d28d9;
+  --badge-dikirim-bg:   #fef3c7; --badge-dikirim-fg:   #b45309;
+  --badge-selesai-bg:   #dcfce7; --badge-selesai-fg:   #15803d;
+  --badge-batal-bg:     #fee2e2; --badge-batal-fg:     #b91c1c;
+  --badge-lunas-bg:     #dcfce7; --badge-lunas-fg:     #15803d;
+  --badge-belum-bg:     #fee2e2; --badge-belum-fg:     #b91c1c;
+  --badge-sebagian-bg:  #fef3c7; --badge-sebagian-fg:  #b45309;
+  --badge-aktif-bg:     #dcfce7; --badge-aktif-fg:     #15803d;
+  --badge-nonaktif-bg:  #fee2e2; --badge-nonaktif-fg:  #b91c1c;
+}

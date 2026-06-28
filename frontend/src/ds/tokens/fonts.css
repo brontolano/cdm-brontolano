@@ -1,0 +1,12 @@
+/* ============================================================
+   Brontolano — Webfonts
+   Display/UI/body: Plus Jakarta Sans (commissioned for Jakarta,
+   Indonesia — a regionally-resonant, modern humanist geometric sans).
+   Data/SKU/prices/receipts: JetBrains Mono (tabular, legible numerals).
+
+   NOTE: the live CDM app ships no webfont (system-ui stack) and its
+   spec doc named Inter/Roboto. Plus Jakarta Sans is a deliberate
+   brand upgrade — see readme.md "Visual Foundations → Type".
+   Loaded from Google Fonts so consumers only link styles.css.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
