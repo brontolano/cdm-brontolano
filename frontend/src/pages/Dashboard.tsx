@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, Store, ReceiptText, TrendingUp, HandCoins, Hourglass, Package, type LucideIcon } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
@@ -50,25 +50,34 @@ export default function Dashboard() {
 
   if (!summary) return <Spinner />;
 
-  const cards = [
-    { label: 'Konsumen Aktif', value: summary.total_konsumen },
-    { label: 'Total Order', value: summary.total_orders },
-    { label: 'Omset Bulan Ini', value: rupiah(summary.omset_bulan_ini) },
-    { label: 'Laba Kotor Bln Ini', value: rupiah(summary.laba_bulan_ini || 0) },
-    { label: 'Piutang', value: rupiah(summary.total_piutang) },
-    { label: 'Stok Rendah', value: summary.barang_stok_rendah },
+  const cards: { label: string; value: any; icon: LucideIcon; accent?: boolean }[] = [
+    { label: 'Konsumen Aktif', value: summary.total_konsumen, icon: Store },
+    { label: 'Total Order', value: summary.total_orders, icon: ReceiptText },
+    { label: 'Omset Bulan Ini', value: rupiah(summary.omset_bulan_ini), icon: TrendingUp, accent: true },
+    { label: 'Laba Kotor Bln Ini', value: rupiah(summary.laba_bulan_ini || 0), icon: HandCoins },
+    { label: 'Piutang', value: rupiah(summary.total_piutang), icon: Hourglass },
+    { label: 'Stok Rendah', value: summary.barang_stok_rendah, icon: Package },
   ];
 
   return (
-    <div>
-      <h2>Dashboard</h2>
-      <div className="grid stat-grid" style={{ marginBottom: 20 }}>
-        {cards.map((c) => (
-          <div key={c.label} className="card stat">
-            <div className="label">{c.label}</div>
-            <div className="value">{c.value}</div>
-          </div>
-        ))}
+    <div className="view">
+      <div className="view__head">
+        <h2>Dashboard</h2>
+        <span className="view__sub">Ringkasan operasional toko Anda</span>
+      </div>
+      <div className="statgrid">
+        {cards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.label} className={'card stat' + (c.accent ? ' is-accent' : '')}>
+              <div className="stat__head">
+                <div className="label">{c.label}</div>
+                <Icon className="stat__icon" size={18} aria-hidden />
+              </div>
+              <div className="value">{c.value}</div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
@@ -89,7 +98,7 @@ export default function Dashboard() {
                 <XAxis dataKey="periode" fontSize={11} />
                 <YAxis fontSize={11} />
                 <Tooltip formatter={(v: any) => rupiah(v)} />
-                <Bar dataKey="omset" fill="#2563eb" />
+                <Bar dataKey="omset" fill="#ed1c24" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
