@@ -53,6 +53,9 @@ export function ProductCard({
         {image ? <img src={image} alt={name} loading="lazy" /> : <span className="ds-product__ph" aria-hidden="true">📦</span>}
         {category && <span className="ds-product__cat">{category}</span>}
         {hotTier && <span className="ds-product__hot">Tier {hotTier} 🔥</span>}
+        {lowestPrice != null && lowestPrice < price && (
+          <span className="ds-product__floortag"><small>SEMURAH</small>{rupiah(lowestPrice)}<i>/krtn</i></span>
+        )}
       </div>
       <div className="ds-product__body">
         <div className="ds-product__name">{name}</div>
@@ -60,9 +63,6 @@ export function ProductCard({
         <div className="ds-product__price">{rupiah(price)} <span className="u">/karton</span>{wasPrice && wasPrice > price ? <span className="was">{rupiah(wasPrice)}</span> : null}</div>
         {perPcs != null && <div className="ds-product__pcs">≈ {rupiah(perPcs)} /pcs{isi ? ` · isi ${isi}` : ''}</div>}
         {saving > 0 && <div className="ds-product__save">Hemat {rupiah(saving)}/karton</div>}
-        {lowestPrice != null && lowestPrice < price && (
-          <div className="ds-product__floor">🔻 Semurah {rupiah(lowestPrice)}<span className="u">/krtn — beli banyak</span></div>
-        )}
         {qty === 0
           ? <button className="ds-product__add" onClick={() => onQty && onQty(1)}>+ Keranjang</button>
           : <div style={{ marginTop: 6 }}><QtyStepper value={qty} onChange={onQty} block /></div>}
