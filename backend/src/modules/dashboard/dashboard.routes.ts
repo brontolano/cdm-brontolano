@@ -6,6 +6,42 @@ import { authenticate } from '../../middleware/auth';
 const router = Router();
 router.use(authenticate);
 
+// GET /dashboard/staff-summary — ringkasan harian untuk PWA staff (scoped ke user login)
+router.get(
+  '/staff-summary',
+  asyncHandler(async (req, res) => {
+    const uid = req.user!.id;
+    const target = Number(process.env.DASHBOARD_TARGET_HARIAN || 5_000_000);
+    const [hariIni, tugas] = await Promise.all([
+      query<{ n: string; omset: string; toko: string }>(
+        `SELECT COUNT(*) AS n, COALESCE(SUM(total_harga),0) AS omset, COUNT(DISTINCT konsumen_id) AS toko
+         FROM orders WHERE created_by=$1 AND status NOT IN ('dibatalkan','draft')
+         AND tanggal_order::date = CURRENT_DATE`,
+        [uid]
+      ),
+      query(
+        `SELECT o.id, o.status, o.total_harga, k.nama_toko, k.alamat_lengkap
+         FROM orders o JOIN konsumen k ON k.id=o.konsumen_id
+         WHERE o.created_by=$1 AND o.status IN ('confirmed','dikirim')
+         ORDER BY o.tanggal_order DESC LIMIT 8`,
+        [uid]
+      ),
+    ]);
+    const omset = Number(hariIni.rows[0].omset);
+    ok(res, {
+      orders_hari_ini: Number(hariIni.rows[0].n),
+      toko_hari_ini: Number(hariIni.rows[0].toko),
+      omset_hari_ini: omset,
+      target_harian: target,
+      progress_pct: Math.min(100, target > 0 ? Math.round((omset / target) * 100) : 0),
+      tugas: tugas.rows.map((t: any) => ({
+        id: t.id, nama_toko: t.nama_toko, alamat: t.alamat_lengkap,
+        status: t.status === 'dikirim' ? 'proses' : t.status === 'selesai' ? 'selesai' : 'menunggu',
+      })),
+    });
+  })
+);
+
 // GET /dashboard/summary — top cards
 router.get(
   '/summary',

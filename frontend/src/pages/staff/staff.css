@@ -17,6 +17,45 @@
 /* ruang agar konten tak tertutup nav */
 .stf-has-nav { padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important; }
 
+/* Beranda staff (hero + progress + mini + quick + tugas) */
+.stf__hero { background: linear-gradient(160deg, var(--slate-900), var(--slate-800)); color: #fff; padding: 18px 16px; padding-top: calc(18px + env(safe-area-inset-top)); }
+.stf__herotop { display: flex; align-items: flex-start; justify-content: space-between; }
+.stf__hello { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+.stf__hsub { font-size: 12.5px; color: var(--slate-400); margin-top: 1px; }
+.stf__sync { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: #cbd5e1; }
+.stf__syncdot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-500); }
+.stf__progress { margin-top: 16px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius-lg); padding: 12px 13px; }
+.stf__progresshead { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; color: #cbd5e1; }
+.stf__progresshead strong { font-size: 16px; color: #fff; font-variant-numeric: tabular-nums; }
+.stf__bar { height: 8px; background: rgba(255,255,255,.15); border-radius: 999px; margin: 8px 0 7px; overflow: hidden; }
+.stf__barfill { height: 100%; background: var(--green-500); border-radius: 999px; transition: width .4s var(--ease-out); }
+.stf__progressval { font-size: 15px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+.stf__progressval span { font-weight: 500; color: var(--slate-400); font-size: 12px; }
+.stf__body2 { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+.stf__mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stf__minicard { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stf__minicard svg { color: var(--slate-400); }
+.stf__minicard strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+.stf__minicard span { font-size: 11px; color: var(--text-muted); }
+.stf__quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stf__qbtn { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; font-family: var(--font-sans); color: var(--text); cursor: pointer; transition: border-color var(--dur-fast); text-decoration: none; }
+.stf__qbtn:hover { border-color: var(--border-strong); }
+.stf__qic { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+.stf__qic--red { background: var(--brand-50); color: var(--brand-600); }
+.stf__qic--green { background: var(--green-50); color: var(--green-600); }
+.stf__qic--blue { background: var(--info-50); color: var(--info-700); }
+.stf__sectionhead { display: flex; align-items: center; justify-content: space-between; }
+.stf__sectionhead strong { font-size: 15px; }
+.stf__link { background: none; border: none; color: var(--brand-600); font-size: 13px; font-weight: 600; font-family: var(--font-sans); cursor: pointer; text-decoration: none; }
+.stf__tasks { display: flex; flex-direction: column; gap: 8px; }
+.stf__task { display: flex; align-items: center; gap: 11px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; text-align: left; font-family: var(--font-sans); cursor: pointer; transition: border-color var(--dur-fast); width: 100%; }
+.stf__task:hover { border-color: var(--border-strong); }
+.stf__taskic { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--surface-sunken); color: var(--slate-500); }
+.stf__taskic--proses { background: var(--info-50); color: var(--info-700); }
+.stf__taskic--selesai { background: var(--green-50); color: var(--green-600); }
+.stf__taskinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.stf__emptytask { text-align: center; color: var(--text-muted); padding: 18px; font-size: 13px; }
+
 /* Akun */
 .stf__head { background: var(--slate-900); color: #fff; padding: 18px 16px; display: flex; align-items: baseline; gap: 10px; position: sticky; top: 0; z-index: 20; padding-top: calc(18px + env(safe-area-inset-top)); }
 .stf__head strong { font-size: 18px; }
