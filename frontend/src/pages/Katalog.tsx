@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Search, LayoutGrid, ChevronDown, X, Check, Download, User, Settings, HandCoins, QrCode, Building2, Landmark, CreditCard, BadgePercent, Truck, MessageCircle } from 'lucide-react';
 import { api } from '../api/client';
 import { priceForQty, tierInfo } from '../utils/pricing';
 import { rupiah } from '../components/ui';
+import { ProductCard, CartBar, QtyStepper, Button } from '../components/ds';
+import './katalog.css';
 
 const WA_NUMBER = import.meta.env.VITE_WA_ORDER_NUMBER || '6285200000000';
 
@@ -23,14 +26,32 @@ function hargaPcs(p: Produk, hargaKarton: number): number | null {
   return per ? Math.round(hargaKarton / per) : null;
 }
 
+const TRUST = [
+  { icon: BadgePercent, t: 'Harga pabrik' },
+  { icon: Truck, t: 'Kirim cepat' },
+  { icon: MessageCircle, t: 'Order via WA' },
+];
+/** Metode pembayaran — `enabled` mengikuti toggle admin (Fase 4 backend). COD utama. */
+const PAYMENTS = [
+  { id: 'cod', name: 'COD — Bayar di Tempat', desc: 'Tunai saat barang tiba', Icon: HandCoins, primary: true, enabled: true },
+  { id: 'qris', name: 'QRIS', desc: 'Scan QR · semua e-wallet & bank', Icon: QrCode, enabled: true },
+  { id: 'transfer', name: 'Transfer Bank', desc: 'BCA · BRI · Mandiri', Icon: Building2, enabled: true },
+  { id: 'va', name: 'Virtual Account', desc: 'Pembayaran VA otomatis', Icon: Landmark, enabled: true },
+  { id: 'card', name: 'Kartu Kredit/Debit', desc: 'Dinonaktifkan oleh admin', Icon: CreditCard, enabled: false },
+];
+const payName = (id: string) => PAYMENTS.find((p) => p.id === id)?.name || '';
+const LADDER: [string, string][] = [['HET', '1–5'], ['S1', '6–9'], ['S2', '10–24'], ['S3', '25–150'], ['S4', '>150']];
+
 export default function Katalog() {
   const [produk, setProduk] = useState<Produk[]>([]);
   const [kategoriList, setKategoriList] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [kategori, setKategori] = useState('');
+  const [catOpen, setCatOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<Record<string, number>>({});
-  const [showCart, setShowCart] = useState(false);
+  const [sheet, setSheet] = useState<null | 'cart' | 'checkout' | 'done'>(null);
+  const [pay, setPay] = useState('cod');
   const installEvt = useRef<any>(null);
   const [canInstall, setCanInstall] = useState(false);
 
@@ -61,13 +82,15 @@ export default function Katalog() {
   const cartItems = useMemo(() =>
     Object.entries(cart).map(([id, qty]) => {
       const p = produk.find((x) => x.id === id); if (!p) return null;
-      const harga = priceForQty(p, qty); return { p, qty, harga, subtotal: harga * qty };
-    }).filter(Boolean) as { p: Produk; qty: number; harga: number; subtotal: number }[],
+      const harga = priceForQty(p, qty);
+      const base = priceForQty(p, 1);
+      return { p, qty, harga, subtotal: harga * qty, saving: Math.max(0, base - harga) * qty };
+    }).filter(Boolean) as { p: Produk; qty: number; harga: number; subtotal: number; saving: number }[],
     [cart, produk]);
   const total = cartItems.reduce((s, i) => s + i.subtotal, 0);
   const totalQty = cartItems.reduce((s, i) => s + i.qty, 0);
+  const totalSaving = cartItems.reduce((s, i) => s + i.saving, 0);
 
-  const [checkout, setCheckout] = useState(false);
   const [ck, setCk] = useState({ nama: '', kontak_wa: '', alamat: '' });
   const [sending, setSending] = useState(false);
 
@@ -75,226 +98,209 @@ export default function Katalog() {
     let msg = '*Pesanan Grosir Brontolano*\n\n';
     if (ck.nama) msg += `Pemesan: ${ck.nama}\n`;
     if (ck.alamat) msg += `Alamat: ${ck.alamat}\n`;
-    msg += '\n';
+    msg += `Pembayaran: ${payName(pay)}\n\n`;
     cartItems.forEach((i, idx) => { msg += `${idx + 1}. ${i.p.nama_barang}${i.p.sku ? ` (${i.p.sku})` : ''}\n   ${i.qty} karton x ${rupiah(i.harga)} (Tier ${tierInfo(i.qty).key}) = ${rupiah(i.subtotal)}\n`; });
     msg += `\n*Total: ${rupiah(total)}*\n\nMohon konfirmasi ketersediaan & ongkir. Terima kasih.`;
     return msg;
   }
 
-  async function submitOrder(e: React.FormEvent) {
-    e.preventDefault();
-    if (!cartItems.length) return;
+  async function submitOrder() {
+    if (!cartItems.length || !ck.nama || !ck.kontak_wa) return;
     setSending(true);
     try {
-      // Simpan pesanan ke sistem (harga dihitung ulang di server)
       await api.post('/public/catalog/order', {
         nama: ck.nama, kontak_wa: ck.kontak_wa, alamat: ck.alamat || undefined,
+        metode_bayar: pay,
         items: cartItems.map((i) => ({ barang_id: i.p.id, jumlah: i.qty })),
-      }).catch(() => {}); // jangan blokir WA jika simpan gagal
+      }).catch(() => {});
       window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waMessage())}`, '_blank');
-      setCheckout(false); setShowCart(false); setCart({});
+      setSheet('done');
     } finally { setSending(false); }
   }
 
+  const catLabel = kategori || 'Semua Kategori';
+  const barVisible = totalQty > 0 && sheet === null && !catOpen;
+
   return (
-    <div style={S.page}>
-      {/* Header */}
-      <header style={S.header}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <img src="/brontolano-mark.png" alt="" style={{ height: 30 }} onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
-          <strong style={{ fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Katalog Brontolano</strong>
+    <div className="cat">
+      <header className="cat__head">
+        <div className="cat__brand">
+          <img src="/brontolano-mark.png" alt="" onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
+          <span className="cat__brandtext">
+            <strong>Brontolano</strong>
+            <span className="cat__brandsub">Grosir Sembako</span>
+          </span>
         </div>
-        {canInstall && <button onClick={install} style={S.installBtn}>⬇️ Install</button>}
+        <div className="cat__headright">
+          <button className="cat__masuk" type="button"><User size={14} aria-hidden /> Masuk</button>
+          {canInstall && <button className="cat__installic" onClick={install} aria-label="Pasang App"><Download size={17} aria-hidden /></button>}
+        </div>
       </header>
 
-      {/* Banner penjelasan harga tier */}
-      <div style={S.banner}>
-        <div style={{ fontWeight: 800, marginBottom: 4 }}>💡 Harga Grosir Bertingkat — Makin Banyak, Makin Murah!</div>
-        <div style={S.tierStrip}>
-          {[['HET', '1–5'], ['S1', '6–9'], ['S2', '10–24'], ['S3', '25–150'], ['S4', '>150']].map(([k, r]) => (
-            <span key={k} style={S.tierPill}><b>{k}</b> {r} krtn</span>
-          ))}
-        </div>
-        <div style={{ fontSize: 11.5, opacity: 0.9, marginTop: 5 }}>Harga per karton otomatis turun saat jumlah di keranjang bertambah. Pesan via WhatsApp.</div>
+      <div className="cat__trust">
+        {TRUST.map((x) => { const I = x.icon; return <span className="cat__trustitem" key={x.t}><I size={14} aria-hidden /> {x.t}</span>; })}
       </div>
 
-      {/* Search (sticky) */}
-      <div style={S.searchWrap}>
-        <input placeholder="🔍 Cari produk / SKU…" value={search} onChange={(e) => setSearch(e.target.value)} style={S.search} />
-      </div>
-
-      {/* Category chips */}
-      <div style={S.chips}>
-        <Chip active={kategori === ''} onClick={() => setKategori('')}>Semua</Chip>
-        {kategoriList.map((k) => <Chip key={k} active={kategori === k} onClick={() => setKategori(k)}>{k}</Chip>)}
-      </div>
-
-      {/* Grid */}
-      <div style={S.gridWrap}>
-        {loading ? <p style={S.muted}>Memuat produk…</p>
-          : produk.length === 0 ? <p style={S.muted}>Tidak ada produk ditemukan.</p>
-          : (
-            <div style={S.grid}>
-              {produk.map((p) => {
-                const qty = cart[p.id] || 0;
-                const qd = Math.max(qty, 1);
-                const hKarton = priceForQty(p, qd);
-                const hPcs = hargaPcs(p, hKarton);
-                const ti = tierInfo(qd);
-                const hBase = priceForQty(p, 1); // harga HET (1 karton)
-                const hemat = qty > 0 && hKarton < hBase; // tier diskon aktif
-                const hematRp = hBase - hKarton;
-                return (
-                  <div key={p.id} style={S.card}>
-                    <div style={S.imgBox}>
-                      {p.gambar
-                        ? <img src={p.gambar} alt={p.nama_barang} style={{ width: '100%', height: '100%', objectFit: 'contain' }} loading="lazy" onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
-                        : <span style={{ fontSize: 34, color: '#cbd5e1' }}>📦</span>}
-                      {p.kategori && <span style={S.catTag}>{p.kategori}</span>}
-                      {hemat && <span style={S.hematTag}>Tier {ti.key} 🔥</span>}
-                    </div>
-                    <div style={S.cardBody}>
-                      <div style={S.name}>{p.nama_barang}</div>
-                      <div style={S.sku}>{p.sku || ''}{p.ukuran ? ` · ${p.ukuran}` : ''}</div>
-                      <div style={S.price}>
-                        {rupiah(hKarton)} <span style={S.unit}>/karton</span>
-                        {hemat && <span style={S.wasPrice}>{rupiah(hBase)}</span>}
-                      </div>
-                      {hemat && <div style={S.savingTag}>Hemat {rupiah(hematRp)}/karton</div>}
-                      {hPcs != null && <div style={S.pcsPrice}>≈ {rupiah(hPcs)} <span style={S.unit}>/pcs</span>{pcsPerKarton(p) ? ` · isi ${pcsPerKarton(p)}` : ''}</div>}
-                      {qty === 0
-                        ? <button onClick={() => setQty(p.id, 1)} style={S.addBtn}>+ Keranjang</button>
-                        : (
-                          <div style={S.stepper}>
-                            <button onClick={() => setQty(p.id, qty - 1)} style={S.stepBtn}>−</button>
-                            <input value={qty} onChange={(e) => setQty(p.id, parseInt(e.target.value) || 0)} inputMode="numeric" style={S.stepInput} />
-                            <button onClick={() => setQty(p.id, qty + 1)} style={S.stepBtn}>+</button>
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-      </div>
-
-      {/* Bottom cart bar */}
-      {totalQty > 0 && !showCart && (
-        <button onClick={() => setShowCart(true)} style={S.bottomBar}>
-          <span style={S.bottomBarBadge}>🛒 {totalQty} item</span>
-          <span>{rupiah(total)}</span>
-          <span style={{ fontWeight: 700 }}>Lihat Keranjang →</span>
-        </button>
-      )}
-
-      {/* Cart bottom sheet */}
-      {showCart && (
-        <div style={S.sheetOverlay} onClick={() => setShowCart(false)}>
-          <div style={S.sheet} onClick={(e) => e.stopPropagation()}>
-            <div style={S.sheetHandle} />
-            <div style={S.sheetHead}>
-              <strong>Keranjang ({totalQty})</strong>
-              <button onClick={() => setShowCart(false)} style={S.closeBtn}>✕</button>
-            </div>
-            <div style={S.sheetBody}>
-              {cartItems.length === 0 ? <p style={S.muted}>Keranjang kosong.</p>
-                : cartItems.map((i) => (
-                  <div key={i.p.id} style={S.cartRow}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{i.p.nama_barang}</div>
-                      <div style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>{rupiah(i.harga)} /karton · Tier {tierInfo(i.qty).key}</div>
-                      {hargaPcs(i.p, i.harga) != null && <div style={{ fontSize: 11, color: '#94a3b8' }}>≈ {rupiah(hargaPcs(i.p, i.harga)!)} /pcs</div>}
-                    </div>
-                    <div style={S.stepperSm}>
-                      <button onClick={() => setQty(i.p.id, i.qty - 1)} style={S.stepBtn}>−</button>
-                      <span style={{ minWidth: 22, textAlign: 'center' }}>{i.qty}</span>
-                      <button onClick={() => setQty(i.p.id, i.qty + 1)} style={S.stepBtn}>+</button>
-                    </div>
-                    <div style={{ fontWeight: 700, minWidth: 72, textAlign: 'right' }}>{rupiah(i.subtotal)}</div>
-                  </div>
-                ))}
-            </div>
-            <div style={S.sheetFoot}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 17 }}>
-                <span>Total</span><strong>{rupiah(total)}</strong>
+      <div className="cat__scroll">
+        <div className="cat__banner">
+          <div className="cat__banner-top">
+            <span className="cat__banner-eyebrow">Promo Grosir</span>
+            <span className="cat__banner-badge">Hemat hingga 5%</span>
+          </div>
+          <div className="cat__banner-h">Belanja Grosir,<br />Untung Lebih Banyak</div>
+          <div className="cat__banner-sub">Makin banyak karton, makin turun harganya — otomatis.</div>
+          <div className="cat__ladder">
+            {LADDER.map(([k, r], idx) => (
+              <div className={'cat__rung' + (idx === 4 ? ' is-best' : '')} key={k}>
+                <span className="cat__rung-k">{k}</span><span className="cat__rung-r">{r}</span>
               </div>
-              <button onClick={() => setCheckout(true)} disabled={!cartItems.length} style={S.waBtn}>
-                Lanjut Pesan via WhatsApp
+            ))}
+          </div>
+          <div className="cat__ladder-cap">Per karton (krtn) — makin banyak, makin murah →</div>
+        </div>
+
+        <div className="cat__searchbar">
+          <div className="cat__searchwrap">
+            <Search className="cat__searchic" size={17} aria-hidden />
+            <input placeholder="Cari produk atau SKU…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="cat__filterbar">
+          <button className={'cat__catbtn' + (catOpen ? ' is-open' : '')} onClick={() => setCatOpen(true)}>
+            <LayoutGrid size={16} aria-hidden /><span>{catLabel}</span><ChevronDown className="cat__catcaret" size={16} aria-hidden />
+          </button>
+          <span className="cat__count">{produk.length} produk</span>
+        </div>
+
+        <div className="cat__grid">
+          {loading ? <p className="cat__empty">Memuat produk…</p>
+            : produk.length === 0 ? <p className="cat__empty">Tidak ada produk ditemukan.</p>
+            : produk.map((p) => {
+              const qty = cart[p.id] || 0; const qd = Math.max(qty, 1);
+              const harga = priceForQty(p, qd); const base = priceForQty(p, 1);
+              const saving = Math.max(0, base - harga);
+              return (
+                <ProductCard key={p.id} name={p.nama_barang} sku={p.sku || ''} size={p.ukuran || ''}
+                  category={p.kategori || ''} image={p.gambar}
+                  price={harga} wasPrice={saving > 0 ? base : null} saving={saving > 0 ? saving : 0}
+                  hotTier={saving > 0 ? tierInfo(qd).key : null}
+                  perPcs={hargaPcs(p, harga)} isi={pcsPerKarton(p)}
+                  qty={qty} onQty={(q) => setQty(p.id, q)} />
+              );
+            })}
+        </div>
+      </div>
+
+      {barVisible && <div className="cat__barwrap"><CartBar count={totalQty} total={total} onClick={() => setSheet('cart')} /></div>}
+
+      {/* Pilih kategori (bottom-sheet) */}
+      {catOpen && (
+        <div className="cat__overlay" onClick={() => setCatOpen(false)}>
+          <div className="cat__sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="cat__handle" />
+            <div className="cat__sheet-head"><strong>Pilih Kategori</strong><button className="cat__x" onClick={() => setCatOpen(false)} aria-label="Tutup"><X size={18} /></button></div>
+            <div className="cat__sheet-body cat__catlist">
+              <button className={'cat__catitem' + (kategori === '' ? ' is-sel' : '')} onClick={() => { setKategori(''); setCatOpen(false); }}>
+                <span>Semua Kategori</span>{kategori === '' && <Check className="cat__catcheck" size={16} />}
               </button>
+              {kategoriList.map((k) => (
+                <button key={k} className={'cat__catitem' + (kategori === k ? ' is-sel' : '')} onClick={() => { setKategori(k); setCatOpen(false); }}>
+                  <span>{k}</span>{kategori === k && <Check className="cat__catcheck" size={16} />}
+                </button>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* Checkout: data pemesan sebelum kirim WA */}
-      {checkout && (
-        <div style={S.sheetOverlay} onClick={() => setCheckout(false)}>
-          <form style={{ ...S.sheet, maxHeight: 'none' }} onClick={(e) => e.stopPropagation()} onSubmit={submitOrder}>
-            <div style={S.sheetHandle} />
-            <div style={S.sheetHead}><strong>Data Pemesan</strong><button type="button" onClick={() => setCheckout(false)} style={S.closeBtn}>✕</button></div>
-            <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input placeholder="Nama *" value={ck.nama} onChange={(e) => setCk({ ...ck, nama: e.target.value })} required style={S.ckInput} />
-              <input placeholder="Nomor WhatsApp *" value={ck.kontak_wa} onChange={(e) => setCk({ ...ck, kontak_wa: e.target.value })} required inputMode="tel" style={S.ckInput} />
-              <textarea placeholder="Alamat (opsional)" value={ck.alamat} onChange={(e) => setCk({ ...ck, alamat: e.target.value })} style={{ ...S.ckInput, minHeight: 60 }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16 }}><span>Total</span><strong>{rupiah(total)}</strong></div>
+      {/* Keranjang */}
+      {sheet === 'cart' && (
+        <div className="cat__overlay" onClick={() => setSheet(null)}>
+          <div className="cat__sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="cat__handle" />
+            <div className="cat__sheet-head"><strong>Keranjang ({totalQty})</strong><button className="cat__x" onClick={() => setSheet(null)} aria-label="Tutup"><X size={18} /></button></div>
+            <div className="cat__sheet-body">
+              {cartItems.length === 0 ? <p className="cat__empty">Keranjang kosong.</p>
+                : cartItems.map((i) => (
+                  <div className="cat__cartrow" key={i.p.id}>
+                    <div className="cat__cartinfo">
+                      <div className="cat__cartname">{i.p.nama_barang}</div>
+                      <div className="cat__carttier">{rupiah(i.harga)} /karton · Tier {tierInfo(i.qty).key}</div>
+                    </div>
+                    <QtyStepper value={i.qty} onChange={(q) => setQty(i.p.id, q)} size="sm" />
+                    <div className="cat__cartsub">{rupiah(i.subtotal)}</div>
+                  </div>
+                ))}
             </div>
-            <div style={S.sheetFoot}>
-              <button type="submit" disabled={sending} style={S.waBtn}>{sending ? 'Mengirim…' : 'Kirim Pesanan via WhatsApp'}</button>
+            <div className="cat__sheet-foot">
+              {totalSaving > 0 && <div className="cat__saverow"><BadgePercent size={15} aria-hidden /> Anda hemat {rupiah(totalSaving)} dengan harga grosir</div>}
+              <div className="cat__totalrow"><span>Total</span><strong>{rupiah(total)}</strong></div>
+              <Button variant="commerce" size="lg" block disabled={!cartItems.length} onClick={() => setSheet('checkout')}>Lanjut ke Pembayaran</Button>
             </div>
-          </form>
+          </div>
+        </div>
+      )}
+
+      {/* Checkout: data + metode pembayaran */}
+      {sheet === 'checkout' && (
+        <div className="cat__overlay" onClick={() => setSheet('cart')}>
+          <div className="cat__sheet" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '92vh' }}>
+            <div className="cat__handle" />
+            <div className="cat__sheet-head"><strong>Checkout</strong><button className="cat__x" onClick={() => setSheet('cart')} aria-label="Tutup"><X size={18} /></button></div>
+            <div className="cat__sheet-body">
+              <div className="cat__formsec">Data Pemesan</div>
+              <div className="ds-field"><label className="ds-field__label">Nama<span className="ds-field__req">*</span></label>
+                <input className="ds-field__control" value={ck.nama} onChange={(e) => setCk({ ...ck, nama: e.target.value })} placeholder="Nama Anda" /></div>
+              <div className="ds-field"><label className="ds-field__label">Nomor WhatsApp<span className="ds-field__req">*</span></label>
+                <input className="ds-field__control" inputMode="tel" value={ck.kontak_wa} onChange={(e) => setCk({ ...ck, kontak_wa: e.target.value })} placeholder="0812 3456 7890" /></div>
+              <div className="ds-field"><label className="ds-field__label">Alamat Pengiriman</label>
+                <input className="ds-field__control" value={ck.alamat} onChange={(e) => setCk({ ...ck, alamat: e.target.value })} placeholder="Jl. / Toko / patokan" /></div>
+
+              <div className="cat__formsec">Metode Pembayaran</div>
+              <div className="cat__paylist">
+                {PAYMENTS.map((p) => {
+                  const I = p.Icon;
+                  return (
+                    <button key={p.id} type="button" disabled={!p.enabled}
+                      className={'cat__payopt' + (pay === p.id ? ' is-sel' : '') + (!p.enabled ? ' is-off' : '')}
+                      onClick={() => p.enabled && setPay(p.id)}>
+                      <span className="cat__payic"><I size={19} aria-hidden /></span>
+                      <span className="cat__payinfo">
+                        <span className="cat__payname">{p.name}{p.primary && <span className="cat__paybadge">Utama</span>}{!p.enabled && <span className="cat__payoff">Nonaktif</span>}</span>
+                        <span className="cat__paydesc">{p.desc}</span>
+                      </span>
+                      <span className="cat__payradio">{pay === p.id && <span className="cat__paydot" />}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="cat__paynote"><Settings size={13} aria-hidden /> Metode pembayaran diatur oleh admin di panel.</div>
+            </div>
+            <div className="cat__sheet-foot">
+              <div className="cat__totalrow"><span>Total ({totalQty} item)</span><strong>{rupiah(total)}</strong></div>
+              <Button variant="commerce" size="lg" block disabled={!ck.nama || !ck.kontak_wa || sending} onClick={submitOrder}>
+                {sending ? 'Memproses…' : 'Buat Pesanan via WhatsApp'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Konfirmasi */}
+      {sheet === 'done' && (
+        <div className="cat__overlay" onClick={() => { setSheet(null); setCart({}); }}>
+          <div className="cat__done" onClick={(e) => e.stopPropagation()}>
+            <div className="cat__done-ic"><Check size={30} aria-hidden /></div>
+            <h3>Pesanan dibuat!</h3>
+            <p className="cat__doneno">{rupiah(total)} · {payName(pay)}</p>
+            <p>{pay === 'cod'
+              ? 'Bayar tunai saat barang tiba. Admin akan konfirmasi stok & ongkir via WhatsApp.'
+              : `Selesaikan pembayaran ${payName(pay)} — instruksi dikirim via WhatsApp.`}</p>
+            <Button variant="commerce" block onClick={() => { setCart({}); setSheet(null); }}>Belanja Lagi</Button>
+          </div>
         </div>
       )}
     </div>
   );
 }
-
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button onClick={onClick} style={{ ...S.chip, ...(active ? S.chipActive : {}) }}>{children}</button>;
-}
-
-const S: Record<string, React.CSSProperties> = {
-  page: { minHeight: '100vh', background: '#f1f5f9', paddingBottom: 'calc(90px + env(safe-area-inset-bottom))' },
-  header: { background: '#000', color: '#fff', padding: '12px 14px', position: 'sticky', top: 0, zIndex: 30, display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 'calc(12px + env(safe-area-inset-top))' },
-  installBtn: { background: '#16a34a', color: '#fff', border: 'none', borderRadius: 999, padding: '7px 12px', fontWeight: 700, fontSize: 13 },
-  banner: { margin: '12px 14px 4px', background: 'linear-gradient(135deg,#15803d,#16a34a)', color: '#fff', borderRadius: 14, padding: '12px 14px' },
-  tierStrip: { display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 },
-  tierPill: { flex: '0 0 auto', background: 'rgba(255,255,255,.18)', borderRadius: 999, padding: '4px 10px', fontSize: 11.5, whiteSpace: 'nowrap' },
-  hematTag: { position: 'absolute', top: 6, right: 6, background: '#dc2626', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 999 },
-  unit: { fontSize: 11, fontWeight: 500, color: '#64748b' },
-  wasPrice: { fontSize: 12, fontWeight: 500, color: '#94a3b8', textDecoration: 'line-through', marginLeft: 6, fontFamily: "'JetBrains Mono', ui-monospace, monospace" },
-  savingTag: { display: 'inline-block', alignSelf: 'flex-start', background: '#dcfce7', color: '#15803d', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 },
-  pcsPrice: { fontSize: 12, color: '#16a34a', fontWeight: 600 },
-  searchWrap: { position: 'sticky', top: 54, zIndex: 20, background: '#f1f5f9', padding: '10px 14px 6px' },
-  search: { width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #d1d5db', fontSize: 15, outline: 'none' },
-  chips: { display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 14px 10px', WebkitOverflowScrolling: 'touch' },
-  chip: { flex: '0 0 auto', background: '#fff', border: '1px solid #e2e8f0', color: '#334155', borderRadius: 999, padding: '8px 16px', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' },
-  chipActive: { background: '#16a34a', color: '#fff', borderColor: '#16a34a' },
-  gridWrap: { padding: '0 12px' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 },
-  card: { background: '#fff', borderRadius: 14, overflow: 'hidden', border: '1px solid #e9eef3', display: 'flex', flexDirection: 'column' },
-  imgBox: { position: 'relative', aspectRatio: '1 / 1', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8 },
-  catTag: { position: 'absolute', top: 6, left: 6, background: 'rgba(22,163,74,.92)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999 },
-  cardBody: { padding: '8px 10px 10px', display: 'flex', flexDirection: 'column', gap: 3, flex: 1 },
-  name: { fontSize: 13.5, fontWeight: 600, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 34 },
-  sku: { fontSize: 11, color: '#94a3b8' },
-  price: { fontSize: 16, fontWeight: 800, color: '#0f172a', marginTop: 2, fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontVariantNumeric: 'tabular-nums' },
-  addBtn: { marginTop: 6, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontWeight: 700, fontSize: 14 },
-  stepper: { marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
-  stepperSm: { display: 'flex', alignItems: 'center', gap: 8 },
-  stepBtn: { width: 38, height: 38, borderRadius: 10, border: '1px solid #d1d5db', background: '#fff', fontSize: 20, fontWeight: 700, lineHeight: 1 },
-  stepInput: { flex: 1, width: '100%', textAlign: 'center', padding: '8px 0', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 15 },
-  muted: { textAlign: 'center', color: '#6b7280', padding: 40 },
-  bottomBar: { position: 'fixed', left: 12, right: 12, bottom: 'calc(12px + env(safe-area-inset-bottom))', zIndex: 40, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: 14, boxShadow: '0 8px 24px rgba(22,163,74,.4)' },
-  bottomBarBadge: { fontWeight: 700 },
-  sheetOverlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' },
-  sheet: { width: '100%', maxWidth: 560, margin: '0 auto', background: '#fff', borderRadius: '18px 18px 0 0', maxHeight: '88vh', display: 'flex', flexDirection: 'column' },
-  sheetHandle: { width: 44, height: 5, borderRadius: 999, background: '#cbd5e1', margin: '10px auto 4px' },
-  sheetHead: { padding: '6px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eef2f7' },
-  closeBtn: { border: 'none', background: 'none', fontSize: 20 },
-  sheetBody: { flex: 1, overflowY: 'auto', padding: 16 },
-  cartRow: { display: 'flex', gap: 10, alignItems: 'center', paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid #f1f5f9' },
-  sheetFoot: { padding: '14px 16px calc(16px + env(safe-area-inset-bottom))', borderTop: '1px solid #eef2f7' },
-  waBtn: { width: '100%', background: '#25D366', color: '#fff', border: 'none', borderRadius: 12, padding: '15px 0', fontWeight: 800, fontSize: 15 },
-  ckInput: { width: '100%', padding: 12, borderRadius: 10, border: '1px solid #d1d5db', fontSize: 15 },
-};
