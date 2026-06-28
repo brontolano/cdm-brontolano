@@ -113,7 +113,12 @@ export default function Katalog() {
         : await kauth.login(af.no_wa, af.password);
       setUser(u); setAuth(null); setAf({ nama: '', no_wa: '', password: '' });
     } catch (err: any) {
-      setAuthErr(err?.response?.data?.error?.message || 'Gagal. Coba lagi.');
+      // Surface penyebab asli: pesan server, kode HTTP, atau kegagalan jaringan.
+      const msg = err?.response?.data?.error?.message
+        || (err?.response ? `Gagal (kode ${err.response.status}). Coba lagi.`
+            : 'Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi.');
+      if (typeof console !== 'undefined') console.error('Auth konsumen gagal:', err);
+      setAuthErr(msg);
     } finally { setAuthBusy(false); }
   }
   async function openAccount() { setOrders(await kauth.fetchOrders()); setAcctOpen(true); }
