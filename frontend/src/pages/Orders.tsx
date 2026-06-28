@@ -20,6 +20,11 @@ export default function Orders() {
   const [konsumenId, setKonsumenId] = useState('');
   const [catatan, setCatatan] = useState('');
   const [items, setItems] = useState<{ barang_id: string; jumlah: number }[]>([{ barang_id: '', jumlah: 1 }]);
+  const [statusFilter, setStatusFilter] = useState('');
+
+  const STATUSES = ['draft', 'confirmed', 'proses', 'dikirim', 'selesai', 'dibatalkan'];
+  const countByStatus = (s: string) => list.filter((o) => o.status === s).length;
+  const filtered = statusFilter ? list.filter((o) => o.status === statusFilter) : list;
 
   async function load() {
     setLoading(true);
@@ -74,12 +79,21 @@ export default function Orders() {
         {isAdmin && <button className="btn" onClick={openForm}><Plus size={16} aria-hidden /> Buat Order</button>}
       </div>
 
+      {list.length > 0 && (
+        <div className="chips-row" style={{ marginBottom: 16 }}>
+          <button className={'chip' + (statusFilter === '' ? ' is-active' : '')} onClick={() => setStatusFilter('')}>Semua ({list.length})</button>
+          {STATUSES.filter((s) => countByStatus(s) > 0).map((s) => (
+            <button key={s} className={'chip' + (statusFilter === s ? ' is-active' : '')} onClick={() => setStatusFilter(statusFilter === s ? '' : s)}>{s} ({countByStatus(s)})</button>
+          ))}
+        </div>
+      )}
+
       <div className="card" style={{ padding: 0 }}>
-        {loading ? <Spinner /> : list.length === 0 ? <EmptyState message="Belum ada order." /> : (
+        {loading ? <Spinner /> : list.length === 0 ? <EmptyState message="Belum ada order." /> : filtered.length === 0 ? <EmptyState message="Tidak ada order pada status ini." /> : (
           <table>
             <thead><tr><th>No. Order</th><th>Toko</th><th>Total</th><th>Status</th><th>Tanggal</th><th></th></tr></thead>
             <tbody>
-              {list.map((o) => (
+              {filtered.map((o) => (
                 <tr key={o.id}>
                   <td>{o.nomor_order}</td><td>{o.nama_toko}</td><td>{rupiah(o.total_harga)}</td>
                   <td><Badge value={o.status} /></td>
