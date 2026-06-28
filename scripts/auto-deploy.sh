@@ -12,8 +12,9 @@ REMOTE=$(git rev-parse origin/main)
 if [ "$LOCAL" != "$REMOTE" ]; then
   echo "$(date '+%F %T') Update terdeteksi ($LOCAL -> $REMOTE), deploy..."
   git pull --quiet origin main
+  # Rebuild + (re)create container. Migrasi DB otomatis jalan di entrypoint
+  # backend (node dist/db/migrate.js) saat container start — tak perlu tsx.
   docker compose up -d --build
-  docker compose exec -T backend npm run migrate >/dev/null 2>&1 || true
   docker image prune -f >/dev/null 2>&1 || true
   # Pastikan route Caddy CDM terpasang setelah (re)create container.
   sh "$REPO_DIR/scripts/ensure-caddy-route.sh" >/dev/null 2>&1 || true
