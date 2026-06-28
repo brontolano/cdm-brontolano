@@ -58,6 +58,8 @@ td .sku, .sku-code { font-family: var(--font-mono); font-size: 12px; }
 .adm__navitem:hover { background: var(--slate-800); color: #fff; }
 .adm__navitem.is-active { background: var(--brand-500); color: #fff; }
 .adm__navitem.is-active svg { color: #fff; }
+.adm__apps { border-top: 1px solid var(--slate-800); padding-top: 8px; margin-top: 4px; }
+.adm__apps-label { font-size: 10px; font-weight: 700; letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--slate-500); padding: 4px 12px; }
 .adm__sidefoot { display: flex; align-items: center; gap: 11px; padding: 10px 12px; font-size: 13px; color: var(--slate-400); border-top: 1px solid var(--slate-800); margin-top: 8px; }
 .adm__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .adm__top { position: sticky; top: 0; z-index: var(--z-header); background: var(--surface-card); border-bottom: 1px solid var(--border); padding: 10px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }

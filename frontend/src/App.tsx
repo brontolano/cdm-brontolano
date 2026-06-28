@@ -1,6 +1,6 @@
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, Inbox, ReceiptText, Banknote, Truck, MessageCircle, Users as UsersIcon, LogOut, Search, Bell, LifeBuoy, Wallet, Coins, type LucideIcon } from 'lucide-react';
-import { useAuth, Role } from './store/auth';
+import { LayoutDashboard, Store, Package, Inbox, ReceiptText, Banknote, Truck, MessageCircle, Users as UsersIcon, LogOut, Search, Bell, LifeBuoy, Wallet, Coins, ExternalLink, ShoppingBag, type LucideIcon } from 'lucide-react';
+import { useAuth, homePathFor, Role } from './store/auth';
 import { Spinner } from './components/ui';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -45,6 +45,13 @@ const MENU: MenuItem[] = [
   { path: '/users', label: 'Manajemen User', icon: UsersIcon, roles: ['admin'] },
 ];
 
+// Pintasan ke surface aplikasi lain (buka di tab baru).
+const APPS: { to: string; label: string; icon: LucideIcon }[] = [
+  { to: '/katalog', label: 'Katalog Konsumen', icon: ShoppingBag },
+  { to: '/sales', label: 'PWA Lapangan', icon: Truck },
+  { to: '/gudang', label: 'PWA Gudang', icon: Package },
+];
+
 function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   if (!user) return null;
@@ -71,6 +78,21 @@ function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+        {(user.role === 'admin' || user.role === 'management') && (
+          <div className="adm__apps">
+            <div className="adm__apps-label">Aplikasi</div>
+            {APPS.map((a) => {
+              const Icon = a.icon;
+              return (
+                <a key={a.to} href={a.to} target="_blank" rel="noreferrer" className="adm__navitem">
+                  <Icon size={18} strokeWidth={2} aria-hidden />
+                  <span>{a.label}</span>
+                  <ExternalLink size={13} aria-hidden style={{ marginLeft: 'auto', opacity: .6 }} />
+                </a>
+              );
+            })}
+          </div>
+        )}
         <div className="adm__sidefoot">
           <LifeBuoy size={17} aria-hidden /><span>Bantuan</span>
         </div>
@@ -135,8 +157,12 @@ export default function App() {
       <Route path="/gudang/masuk" element={<MobileProtected roles={gud}><GudangMasuk /></MobileProtected>} />
       <Route path="/gudang/keluar" element={<MobileProtected roles={gud}><GudangKeluar /></MobileProtected>} />
       <Route path="/gudang/akun" element={<MobileProtected roles={gud}><StaffAkun /></MobileProtected>} />
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/" element={<Protected><Dashboard /></Protected>} />
+      <Route path="/login" element={user ? <Navigate to={homePathFor(user.role)} replace /> : <Login />} />
+      <Route path="/" element={
+        user && user.role === 'lapangan' ? <Navigate to="/sales" replace />
+        : user && user.role === 'gudang' ? <Navigate to="/gudang" replace />
+        : <Protected><Dashboard /></Protected>
+      } />
       <Route path="/konsumen" element={<Protected><Konsumen /></Protected>} />
       <Route path="/inventory" element={<Protected><Inventory /></Protected>} />
       <Route path="/pesanan" element={<Protected><PesananMasuk /></Protected>} />

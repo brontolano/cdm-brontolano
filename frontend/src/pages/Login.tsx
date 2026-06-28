@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../store/auth';
+import { useAuth, homePathFor } from '../store/auth';
 import { apiError } from '../api/client';
 
 export default function Login() {
@@ -16,8 +16,8 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      navigate('/');
+      const u = await login(email, password);
+      navigate(homePathFor(u.role));
     } catch (err) {
       setError(apiError(err));
     } finally {

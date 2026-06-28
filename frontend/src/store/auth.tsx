@@ -9,10 +9,14 @@ export interface User {
   nama_lengkap: string;
 }
 
+/** Halaman awal sesuai role: staff → PWA-nya, admin/manajemen → dashboard. */
+export const homePathFor = (role: Role) =>
+  role === 'lapangan' ? '/sales' : role === 'gudang' ? '/gudang' : '/';
+
 interface AuthCtx {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -40,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { user, accessToken, refreshToken } = r.data.data;
     setTokens(accessToken, refreshToken);
     setUser(user);
+    return user as User;
   }
 
   function logout() {
