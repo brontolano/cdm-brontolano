@@ -1,4 +1,5 @@
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { LayoutDashboard, Store, Package, Inbox, ReceiptText, Banknote, Truck, MessageCircle, Users as UsersIcon, type LucideIcon } from 'lucide-react';
 import { useAuth, Role } from './store/auth';
 import { Spinner } from './components/ui';
 import Login from './pages/Login';
@@ -23,20 +24,20 @@ import GudangKeluar from './pages/gudang/GudangKeluar';
 interface MenuItem {
   path: string;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   roles?: Role[]; // visible to these roles (undefined = all)
 }
 
 const MENU: MenuItem[] = [
-  { path: '/', label: 'Dashboard', icon: '📊' },
-  { path: '/konsumen', label: 'Konsumen', icon: '🏪' },
-  { path: '/inventory', label: 'Inventory', icon: '📦' },
-  { path: '/pesanan', label: 'Pesanan Masuk', icon: '📥' },
-  { path: '/orders', label: 'Orders', icon: '🧾' },
-  { path: '/invoices', label: 'Invoices', icon: '💵' },
-  { path: '/pengiriman', label: 'Pengiriman', icon: '🚚' },
-  { path: '/broadcasting', label: 'Broadcast WA', icon: '💬', roles: ['lapangan', 'admin'] },
-  { path: '/users', label: 'Manajemen User', icon: '👥', roles: ['admin'] },
+  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/konsumen', label: 'Konsumen', icon: Store },
+  { path: '/inventory', label: 'Inventory', icon: Package },
+  { path: '/pesanan', label: 'Pesanan Masuk', icon: Inbox },
+  { path: '/orders', label: 'Orders', icon: ReceiptText },
+  { path: '/invoices', label: 'Invoices', icon: Banknote },
+  { path: '/pengiriman', label: 'Pengiriman', icon: Truck },
+  { path: '/broadcasting', label: 'Broadcast WA', icon: MessageCircle, roles: ['lapangan', 'admin'] },
+  { path: '/users', label: 'Manajemen User', icon: UsersIcon, roles: ['admin'] },
 ];
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -54,11 +55,15 @@ function Layout({ children }: { children: React.ReactNode }) {
           </span>
         </h1>
         <nav>
-          {visible.map((m) => (
-            <NavLink key={m.path} to={m.path} end={m.path === '/'}>
-              {m.icon} <span>{m.label}</span>
-            </NavLink>
-          ))}
+          {visible.map((m) => {
+            const Icon = m.icon;
+            return (
+              <NavLink key={m.path} to={m.path} end={m.path === '/'}>
+                <Icon size={18} strokeWidth={2} aria-hidden />
+                <span>{m.label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
       </aside>
       <div className="main">
