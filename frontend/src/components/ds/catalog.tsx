@@ -57,9 +57,9 @@ export function ProductCard({
         {category && <span className="ds-product__cat">{category}</span>}
         {hotTier && <span className="ds-product__hot">Tier {hotTier} 🔥</span>}
         {lowestPrice != null && lowestPrice < price && (
-          <div className="ds-product__floorbanner">
-            <span className="ds-product__floorlabel">🔥 TERMURAH</span>
-            <span className="ds-product__floorprice">{rupiah(lowestPrice)}<i>/{priceUnit}</i></span>
+          <div className="ds-product__floortag">
+            <span className="ds-product__floorlabel">🔥 Semurah</span>
+            <span className="ds-product__floorprice">{rupiah(lowestPrice)}</span>
           </div>
         )}
       </div>
