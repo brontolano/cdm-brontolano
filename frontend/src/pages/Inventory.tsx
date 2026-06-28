@@ -190,6 +190,21 @@ export default function Inventory() {
     setHistory({ barang: b, rows });
   }
 
+  // Buka form edit — konversi semua nilai NUMERIC (string "188000.00") jadi angka
+  // bersih agar input number tak menampilkan ".00".
+  function openEditBarang(b: Barang) {
+    const num = (v: unknown) => (v === null || v === undefined || v === '' ? null : Number(v));
+    setForm({
+      ...b,
+      hpp: num(b.hpp), harga_jual: num(b.harga_jual),
+      harga_het: num(b.harga_het), harga_s1: num(b.harga_s1), harga_s2: num(b.harga_s2),
+      harga_s3: num(b.harga_s3), harga_s4: num(b.harga_s4), batas_het: num(b.batas_het),
+      isi_karton: num(b.isi_karton), isi_pcs: num(b.isi_pcs),
+    });
+    setEditId(b.id);
+    setShowForm(true);
+  }
+
   async function removeBarang(b: Barang) {
     if (!confirm(`Hapus barang "${b.nama_barang}"?`)) return;
     try {
@@ -248,7 +263,7 @@ export default function Inventory() {
                     <button className="btn secondary small" onClick={() => openHistory(b)}>History</button>
                     {canMasuk && <button className="btn small" style={{ marginLeft: 6 }} onClick={() => setMasuk({ barang: b, jumlah: 0, keterangan: '' })}>+ Masuk</button>}
                     {canMasuk && <button className="btn secondary small" style={{ marginLeft: 6 }} onClick={() => setOpname({ barang: b, stok_baru: b.stok_saat_ini, keterangan: '' })}>Opname</button>}
-                    {isAdmin && <button className="btn secondary small" style={{ marginLeft: 6 }} onClick={() => { setForm({ ...b, hpp: Number(b.hpp), harga_jual: Number(b.harga_jual) }); setEditId(b.id); setShowForm(true); }}>Edit</button>}
+                    {isAdmin && <button className="btn secondary small" style={{ marginLeft: 6 }} onClick={() => { openEditBarang(b); }}>Edit</button>}
                     {isAdmin && <button className="btn danger small" style={{ marginLeft: 6 }} onClick={() => removeBarang(b)}>Hapus</button>}
                   </td>
                 </tr>
