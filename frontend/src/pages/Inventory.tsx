@@ -210,7 +210,7 @@ export default function Inventory() {
               {list.map((b) => (
                 <tr key={b.id} style={b.stok_saat_ini < b.stok_minimum ? { background: '#fef2f2' } : {}}>
                   <td>{b.gambar ? <img src={b.gambar} alt={b.nama_barang} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} /> : <span className="muted">—</span>}</td>
-                  <td className="muted">{b.sku || '-'}</td>
+                  <td className="muted sku-code">{b.sku || '-'}</td>
                   <td>{b.nama_barang}{b.ukuran ? <span className="muted"> · {b.ukuran}</span> : ''}</td>
                   <td>{b.kategori || '-'}</td>
                   <td style={{ fontSize: 13 }}>

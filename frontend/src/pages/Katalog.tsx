@@ -270,7 +270,7 @@ const S: Record<string, React.CSSProperties> = {
   cardBody: { padding: '8px 10px 10px', display: 'flex', flexDirection: 'column', gap: 3, flex: 1 },
   name: { fontSize: 13.5, fontWeight: 600, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 34 },
   sku: { fontSize: 11, color: '#94a3b8' },
-  price: { fontSize: 16, fontWeight: 800, color: '#0f172a', marginTop: 2 },
+  price: { fontSize: 16, fontWeight: 800, color: '#0f172a', marginTop: 2, fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontVariantNumeric: 'tabular-nums' },
   addBtn: { marginTop: 6, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontWeight: 700, fontSize: 14 },
   stepper: { marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   stepperSm: { display: 'flex', alignItems: 'center', gap: 8 },
