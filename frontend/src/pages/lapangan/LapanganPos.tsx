@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ReceiptText } from 'lucide-react';
 import { MobilePage } from './shell';
 import { api, apiError } from '../../api/client';
 import { useToast } from '../../store/toast';
@@ -62,7 +63,7 @@ export default function LapanganPos() {
           <strong>✅ {lastOrder.nomor_order}</strong> — {rupiah(lastOrder.total_harga)}<br />
           <span className="muted">Invoice {lastOrder.invoice?.nomor_invoice}</span>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button className="btn" style={{ flex: 1 }} onClick={cetak}>🧾 Cetak Struk</button>
+            <button className="btn" style={{ flex: 1 }} onClick={cetak}><ReceiptText size={16} aria-hidden /> Cetak Struk</button>
             <button className="btn secondary" onClick={() => setLastOrder(null)}>Order Baru</button>
           </div>
         </div>

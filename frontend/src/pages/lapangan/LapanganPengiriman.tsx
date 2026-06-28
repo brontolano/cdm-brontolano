@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ReceiptText, Banknote } from 'lucide-react';
 import { MobilePage } from './shell';
 import { api, apiError } from '../../api/client';
 import { useToast } from '../../store/toast';
@@ -94,8 +95,8 @@ export default function LapanganPengiriman() {
                           </div>
                           <div style={{ fontSize: 12, color: '#64748b' }}>{o.nama_toko}</div>
                           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                            <button className="btn secondary small" style={{ flex: 1 }} onClick={() => cetakStruk(o)}>🧾 Struk</button>
-                            <button className="btn secondary small" style={{ flex: 1 }} onClick={() => cetakInvoice(o)}>💵 Invoice</button>
+                            <button className="btn secondary small" style={{ flex: 1 }} onClick={() => cetakStruk(o)}><ReceiptText size={14} aria-hidden /> Struk</button>
+                            <button className="btn secondary small" style={{ flex: 1 }} onClick={() => cetakInvoice(o)}><Banknote size={14} aria-hidden /> Invoice</button>
                           </div>
                         </div>
                       );
