@@ -36,6 +36,7 @@ export interface ProductCardProps extends React.HTMLAttributes<HTMLDivElement> {
   hotTier?: string | null;
   wasPrice?: number | null;
   saving?: number;
+  lowestPrice?: number | null; // harga termurah (tier S4) untuk anchor "terkesan murah"
   qty?: number;
   onQty?: (v: number) => void;
 }
@@ -44,7 +45,7 @@ export interface ProductCardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function ProductCard({
   name, sku = '', size = '', category = '', image = null,
   price, perPcs = null, isi = null, hotTier = null,
-  wasPrice = null, saving = 0, qty = 0, onQty, className = '', ...rest
+  wasPrice = null, saving = 0, lowestPrice = null, qty = 0, onQty, className = '', ...rest
 }: ProductCardProps) {
   return (
     <div className={['ds-product', className].filter(Boolean).join(' ')} {...rest}>
@@ -59,6 +60,9 @@ export function ProductCard({
         <div className="ds-product__price">{rupiah(price)} <span className="u">/karton</span>{wasPrice && wasPrice > price ? <span className="was">{rupiah(wasPrice)}</span> : null}</div>
         {perPcs != null && <div className="ds-product__pcs">≈ {rupiah(perPcs)} /pcs{isi ? ` · isi ${isi}` : ''}</div>}
         {saving > 0 && <div className="ds-product__save">Hemat {rupiah(saving)}/karton</div>}
+        {lowestPrice != null && lowestPrice < price && (
+          <div className="ds-product__floor">🔻 Semurah {rupiah(lowestPrice)}<span className="u">/krtn — beli banyak</span></div>
+        )}
         {qty === 0
           ? <button className="ds-product__add" onClick={() => onQty && onQty(1)}>+ Keranjang</button>
           : <div style={{ marginTop: 6 }}><QtyStepper value={qty} onChange={onQty} block /></div>}

@@ -263,12 +263,13 @@ export default function Katalog() {
               const qty = cart[p.id] || 0; const qd = Math.max(qty, 1);
               const harga = priceForQty(p, qd); const base = priceForQty(p, 1);
               const saving = Math.max(0, base - harga);
+              const floor = priceForQty(p, 200); // harga termurah (tier S4)
               return (
                 <ProductCard key={p.id} name={p.nama_barang} sku={p.sku || ''} size={p.ukuran || ''}
                   category={p.kategori || ''} image={p.gambar}
                   price={harga} wasPrice={saving > 0 ? base : null} saving={saving > 0 ? saving : 0}
                   hotTier={saving > 0 ? tierInfo(qd).key : null}
-                  perPcs={hargaPcs(p, harga)} isi={pcsPerKarton(p)}
+                  perPcs={hargaPcs(p, harga)} isi={pcsPerKarton(p)} lowestPrice={floor}
                   qty={qty} onQty={(q) => setQty(p.id, q)} />
               );
             })}
