@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Boxes } from 'lucide-react';
+import { Package, AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Boxes, Download } from 'lucide-react';
 import { useAuth } from '../../store/auth';
+import { usePwaInstall } from '../../utils/usePwaInstall';
 import { api } from '../../api/client';
 import StaffBottomNav from '../staff/StaffBottomNav';
 import '../staff/staff.css';
@@ -10,6 +11,7 @@ interface Barang { id: string; nama_barang: string; stok_saat_ini: number; stok_
 
 export default function GudangHome() {
   const { user } = useAuth();
+  const { canInstall, install } = usePwaInstall();
   const nav = useNavigate();
   const [list, setList] = useState<Barang[] | null>(null);
 
@@ -27,7 +29,9 @@ export default function GudangHome() {
             <div className="stf__hello">Halo, {namaDepan}</div>
             <div className="stf__hsub">Staff Gudang · Brontolano</div>
           </div>
-          <span className="stf__sync"><span className="stf__syncdot" /> Tersinkron</span>
+          {canInstall
+            ? <button className="stf__installchip" onClick={install}><Download size={14} aria-hidden /> Pasang</button>
+            : <span className="stf__sync"><span className="stf__syncdot" /> Tersinkron</span>}
         </div>
       </header>
 

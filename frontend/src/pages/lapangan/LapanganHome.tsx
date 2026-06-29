@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Receipt, Store, Wallet, Plus, Truck, MapPin, Package } from 'lucide-react';
+import { Receipt, Store, Wallet, Plus, Truck, MapPin, Package, Download } from 'lucide-react';
 import { useAuth } from '../../store/auth';
+import { usePwaInstall } from '../../utils/usePwaInstall';
 import { api } from '../../api/client';
 import { rupiah } from '../../components/ds';
 import { StatusBadge } from '../../components/ds';
@@ -15,6 +16,7 @@ const rIngkas = (n: number) => n >= 1_000_000 ? 'Rp ' + (n / 1_000_000).toFixed(
 
 export default function LapanganHome() {
   const { user } = useAuth();
+  const { canInstall, install } = usePwaInstall();
   const nav = useNavigate();
   const [s, setS] = useState<Summary | null>(null);
 
@@ -30,7 +32,9 @@ export default function LapanganHome() {
             <div className="stf__hello">Halo, {namaDepan}</div>
             <div className="stf__hsub">Staff Lapangan · Brontolano</div>
           </div>
-          <span className="stf__sync"><span className="stf__syncdot" /> Tersinkron</span>
+          {canInstall
+            ? <button className="stf__installchip" onClick={install}><Download size={14} aria-hidden /> Pasang</button>
+            : <span className="stf__sync"><span className="stf__syncdot" /> Tersinkron</span>}
         </div>
         <div className="stf__progress">
           <div className="stf__progresshead">

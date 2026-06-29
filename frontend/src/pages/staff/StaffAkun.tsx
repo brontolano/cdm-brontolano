@@ -1,6 +1,7 @@
-import { RefreshCw, Settings, Bell, LifeBuoy, Info, ChevronRight, LogOut } from 'lucide-react';
+import { RefreshCw, Settings, Bell, LifeBuoy, Info, ChevronRight, LogOut, Download } from 'lucide-react';
 import { useAuth } from '../../store/auth';
 import { Button } from '../../components/ds';
+import { usePwaInstall } from '../../utils/usePwaInstall';
 import StaffBottomNav from './StaffBottomNav';
 import './staff.css';
 
@@ -11,6 +12,7 @@ const MENU: [typeof Settings, string][] = [
 /** Tab Akun PWA staff — profil + menu + keluar. */
 export default function StaffAkun() {
   const { user, logout } = useAuth();
+  const { canInstall, install } = usePwaInstall();
   const initials = (user?.nama_lengkap || 'U').split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('');
   const peran = user?.role === 'gudang' ? 'Staff Gudang' : 'Staff Lapangan';
   return (
@@ -22,6 +24,9 @@ export default function StaffAkun() {
           <div><div className="stf__taskname">{user?.nama_lengkap}</div><div className="stf__taskaddr">{peran} · Brontolano</div></div>
         </div>
         <div className="stf__synccard"><RefreshCw size={16} aria-hidden /> <span>Tersinkron</span><span className="stf__online">● Online</span></div>
+        {canInstall && (
+          <Button variant="primary" block iconLeft={<Download size={17} />} onClick={install}>Pasang Aplikasi ke HP</Button>
+        )}
         <div className="stf__menu">
           {MENU.map(([Icon, label]) => (
             <button className="stf__menuitem" key={label}>
