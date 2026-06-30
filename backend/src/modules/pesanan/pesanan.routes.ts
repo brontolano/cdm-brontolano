@@ -77,4 +77,15 @@ router.post(
   })
 );
 
+// DELETE /api/pesanan/:id — hapus pesanan masuk dari katalog (super_admin)
+router.delete(
+  '/:id',
+  rbac('super_admin'),
+  asyncHandler(async (req, res) => {
+    const r = await query('DELETE FROM pesanan_masuk WHERE id=$1 RETURNING id', [req.params.id]);
+    if (!r.rowCount) throw errors.notFound('Pesanan tidak ditemukan');
+    ok(res, { message: 'Pesanan dihapus' });
+  })
+);
+
 export default router;

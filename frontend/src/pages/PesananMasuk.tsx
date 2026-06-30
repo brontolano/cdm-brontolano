@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, apiError } from '../api/client';
-import { useAuth, isAdminLike } from '../store/auth';
+import { useAuth, isAdminLike, isSuperAdmin } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState, rupiah } from '../components/ui';
 
@@ -8,6 +8,7 @@ export default function PesananMasuk() {
   const { user } = useAuth();
   const { notify } = useToast();
   const isAdmin = isAdminLike(user?.role);
+  const isSuper = isSuperAdmin(user?.role);
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
@@ -30,6 +31,11 @@ export default function PesananMasuk() {
       notify('success', `Order ${r.data.data.order.nomor_order} dibuat dari pesanan`);
       setDetail(null); load();
     } catch (err) { notify('error', apiError(err)); }
+  }
+  async function remove(id: string) {
+    if (!confirm('Hapus pesanan masuk ini permanen?')) return;
+    try { await api.delete(`/pesanan/${id}`); notify('success', 'Pesanan dihapus'); setDetail(null); load(); }
+    catch (err) { notify('error', apiError(err)); }
   }
 
   return (
@@ -74,6 +80,11 @@ export default function PesananMasuk() {
               {detail.status !== 'batal' && <button className="btn secondary" onClick={() => setStatus(detail.id, 'batal')}>Batalkan</button>}
               {detail.status !== 'selesai' && <button className="btn secondary" onClick={() => setStatus(detail.id, 'selesai')}>Tandai Selesai</button>}
               {!detail.order_id && <button className="btn" onClick={() => convert(detail.id)}>Jadikan Order</button>}
+            </div>
+          )}
+          {isSuper && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10, borderTop: '1px solid #eee', paddingTop: 10 }}>
+              <button className="btn danger" onClick={() => remove(detail.id)}>Hapus Pesanan Permanen</button>
             </div>
           )}
         </Modal>
