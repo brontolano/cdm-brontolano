@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, ReceiptText, X } from 'lucide-react';
 import { api, apiError } from '../api/client';
-import { useAuth } from '../store/auth';
+import { useAuth, isAdminLike, isSuperAdmin } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState, rupiah } from '../components/ui';
 import { priceForQty, tierInfo } from '../utils/pricing';
@@ -10,7 +10,8 @@ import { printThermalReceipt } from '../utils/receipt';
 export default function Orders() {
   const { user } = useAuth();
   const { notify } = useToast();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isAdminLike(user?.role);
+  const isSuper = isSuperAdmin(user?.role);
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [konsumen, setKonsumen] = useState<any[]>([]);
@@ -69,6 +70,11 @@ export default function Orders() {
   async function cancelOrder(id: string) {
     if (!confirm('Batalkan order ini?')) return;
     try { await api.post(`/orders/${id}/cancel`); notify('info', 'Order dibatalkan'); setDetail(null); load(); }
+    catch (err) { notify('error', apiError(err)); }
+  }
+  async function deleteOrder(id: string) {
+    if (!confirm('Hapus order ini permanen beserta item & invoice terkait? Tindakan tidak bisa dibatalkan.')) return;
+    try { await api.delete(`/orders/${id}`); notify('success', 'Order dihapus'); setDetail(null); load(); }
     catch (err) { notify('error', apiError(err)); }
   }
 
@@ -178,6 +184,11 @@ export default function Orders() {
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button className="btn danger" onClick={() => cancelOrder(detail.id)}>Batalkan</button>
               <button className="btn" onClick={() => confirmOrder(detail.id)}>Konfirmasi (kurangi stok)</button>
+            </div>
+          )}
+          {isSuper && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10, borderTop: '1px solid #eee', paddingTop: 10 }}>
+              <button className="btn danger" onClick={() => deleteOrder(detail.id)}>Hapus Order Permanen</button>
             </div>
           )}
         </Modal>

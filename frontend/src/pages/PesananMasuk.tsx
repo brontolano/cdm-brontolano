@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api, apiError } from '../api/client';
-import { useAuth } from '../store/auth';
+import { useAuth, isAdminLike } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState, rupiah } from '../components/ui';
 
 export default function PesananMasuk() {
   const { user } = useAuth();
   const { notify } = useToast();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isAdminLike(user?.role);
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);

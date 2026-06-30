@@ -9,6 +9,11 @@ export interface User {
   nama_lengkap: string;
 }
 
+/** Role admin penuh (admin biasa + super_admin) — dipakai untuk gating tombol aksi. */
+export const isAdminLike = (role?: Role) => role === 'admin' || role === 'super_admin';
+/** Super admin: akses CRUD penuh termasuk hapus data. */
+export const isSuperAdmin = (role?: Role) => role === 'super_admin';
+
 /** Halaman awal sesuai role: staff → PWA-nya, admin/manajemen → dashboard. */
 export const homePathFor = (role: Role) =>
   role === 'lapangan' ? '/sales' : role === 'gudang' ? '/gudang' : '/';

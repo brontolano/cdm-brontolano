@@ -83,4 +83,15 @@ router.put(
   })
 );
 
+// DELETE /pengiriman/:id — hapus rute pengiriman (super_admin)
+router.delete(
+  '/:id',
+  rbac('super_admin'),
+  asyncHandler(async (req, res) => {
+    const r = await query('DELETE FROM pengiriman WHERE id=$1 RETURNING id', [req.params.id]);
+    if (!r.rowCount) throw errors.notFound('Pengiriman tidak ditemukan');
+    ok(res, { message: 'Pengiriman dihapus' });
+  })
+);
+
 export default router;

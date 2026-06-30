@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Upload, Download } from 'lucide-react';
 import { api, apiError } from '../api/client';
-import { useAuth } from '../store/auth';
+import { useAuth, isAdminLike } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Spinner, EmptyState, rupiah } from '../components/ui';
 import { fileToCompressedDataUrl } from '../utils/image';
@@ -39,8 +39,8 @@ const empty = {
 export default function Inventory() {
   const { user } = useAuth();
   const { notify } = useToast();
-  const isAdmin = user?.role === 'admin';
-  const canMasuk = user?.role === 'gudang' || user?.role === 'admin';
+  const isAdmin = isAdminLike(user?.role);
+  const canMasuk = user?.role === 'gudang' || isAdminLike(user?.role);
   const [list, setList] = useState<Barang[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<any>(empty);

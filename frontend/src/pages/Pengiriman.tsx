@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { api, apiError } from '../api/client';
-import { useAuth } from '../store/auth';
+import { useAuth, isAdminLike, isSuperAdmin } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState } from '../components/ui';
 import { MapView } from '../components/MapView';
@@ -10,7 +10,8 @@ import { gmapsRoute } from '../utils/maps';
 export default function Pengiriman() {
   const { user } = useAuth();
   const { notify } = useToast();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isAdminLike(user?.role);
+  const isSuper = isSuperAdmin(user?.role);
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -47,6 +48,12 @@ export default function Pengiriman() {
     catch (err) { notify('error', apiError(err)); }
   }
 
+  async function remove(id: string) {
+    if (!confirm('Hapus rute pengiriman ini permanen?')) return;
+    try { await api.delete(`/pengiriman/${id}`); notify('success', 'Pengiriman dihapus'); load(); }
+    catch (err) { notify('error', apiError(err)); }
+  }
+
   return (
     <div>
       <div className="toolbar">
@@ -75,6 +82,9 @@ export default function Pengiriman() {
                         <option value="completed">completed</option>
                         <option value="delayed">delayed</option>
                       </select>
+                    )}
+                    {isSuper && (
+                      <button className="btn danger small" style={{ marginLeft: 6 }} onClick={() => remove(p.id)}>Hapus</button>
                     )}
                   </td>
                 </tr>

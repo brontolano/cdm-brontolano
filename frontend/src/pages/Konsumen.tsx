@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { api, apiError } from '../api/client';
-import { useAuth } from '../store/auth';
+import { useAuth, isAdminLike } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState } from '../components/ui';
 import { MapView } from '../components/MapView';
@@ -25,7 +25,7 @@ const empty = { nama_toko: '', nama_pemilik: '', kontak_wa: '', alamat_lengkap: 
 export default function KonsumenPage() {
   const { user } = useAuth();
   const { notify } = useToast();
-  const canEdit = user?.role === 'lapangan' || user?.role === 'admin';
+  const canEdit = user?.role === 'lapangan' || isAdminLike(user?.role);
   const [list, setList] = useState<Konsumen[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -148,7 +148,7 @@ export default function KonsumenPage() {
                   <td><Badge value={k.status} /></td>
                   <td className="right">
                     {canEdit && <button className="btn secondary small" onClick={() => openEdit(k)}>Edit</button>}
-                    {user?.role === 'admin' && <button className="btn danger small" style={{ marginLeft: 6 }} onClick={() => remove(k)}>Hapus</button>}
+                    {isAdminLike(user?.role) && <button className="btn danger small" style={{ marginLeft: 6 }} onClick={() => remove(k)}>Hapus</button>}
                   </td>
                 </tr>
               ))}

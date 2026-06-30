@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Printer, ReceiptText } from 'lucide-react';
 import { api, apiError } from '../api/client';
-import { useAuth } from '../store/auth';
+import { useAuth, isAdminLike, isSuperAdmin } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState, rupiah } from '../components/ui';
 import { printThermalReceipt } from '../utils/receipt';
@@ -9,7 +9,8 @@ import { printThermalReceipt } from '../utils/receipt';
 export default function Invoices() {
   const { user } = useAuth();
   const { notify } = useToast();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isAdminLike(user?.role);
+  const isSuper = isSuperAdmin(user?.role);
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
@@ -35,6 +36,12 @@ export default function Invoices() {
       const inv = (await api.get(`/invoices/${detail.id}`)).data.data;
       setDetail(inv); load();
     } catch (err) { notify('error', apiError(err)); }
+  }
+
+  async function remove(id: string) {
+    if (!confirm('Hapus invoice ini permanen? Tindakan tidak bisa dibatalkan.')) return;
+    try { await api.delete(`/invoices/${id}`); notify('success', 'Invoice dihapus'); setDetail(null); load(); }
+    catch (err) { notify('error', apiError(err)); }
   }
 
   return (
@@ -94,6 +101,9 @@ export default function Invoices() {
                 <input type="number" value={bayar} onChange={(e) => setBayar(Number(e.target.value))} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', width: 140 }} />
                 <button className="btn" onClick={pay}>Catat Pembayaran</button>
               </span>
+            )}
+            {isSuper && (
+              <button className="btn danger" style={{ marginLeft: 12 }} onClick={() => remove(detail.id)}>Hapus Invoice</button>
             )}
           </div>
         </Modal>

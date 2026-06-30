@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { query } from '../../db/pool';
-import { asyncHandler, ok, created, parsePagination } from '../../utils/http';
+import { asyncHandler, ok, created, errors, parsePagination } from '../../utils/http';
 import { authenticate, rbac } from '../../middleware/auth';
 import * as service from './orders.service';
 
@@ -64,6 +64,18 @@ router.put(
     const { status } = z.object({ status: z.enum(['proses', 'dikirim', 'selesai']) }).parse(req.body);
     const r = await query(`UPDATE orders SET status=$1, updated_at=now() WHERE id=$2 RETURNING *`, [status, req.params.id]);
     ok(res, r.rows[0]);
+  })
+);
+
+// DELETE /orders/:id — hapus order beserta item & invoice terkait (super_admin)
+router.delete(
+  '/:id',
+  rbac('super_admin'),
+  asyncHandler(async (req, res) => {
+    // order_items & invoices ON DELETE CASCADE → ikut terhapus
+    const r = await query('DELETE FROM orders WHERE id=$1 RETURNING id', [req.params.id]);
+    if (!r.rowCount) throw errors.notFound('Order tidak ditemukan');
+    ok(res, { message: 'Order dihapus' });
   })
 );
 

@@ -77,4 +77,15 @@ router.post(
   })
 );
 
+// DELETE /invoices/:id — hapus invoice (super_admin)
+router.delete(
+  '/:id',
+  rbac('super_admin'),
+  asyncHandler(async (req, res) => {
+    const r = await query('DELETE FROM invoices WHERE id=$1 RETURNING id', [req.params.id]);
+    if (!r.rowCount) throw errors.notFound('Invoice tidak ditemukan');
+    ok(res, { message: 'Invoice dihapus' });
+  })
+);
+
 export default router;
