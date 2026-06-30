@@ -8,7 +8,7 @@ import { authenticate, rbac } from '../../middleware/auth';
 const router = Router();
 router.use(authenticate, rbac('admin')); // semua manajemen user khusus admin
 
-const roleEnum = z.enum(['lapangan', 'gudang', 'admin', 'management']);
+const roleEnum = z.enum(['lapangan', 'gudang', 'admin', 'management', 'super_admin']);
 
 // GET /api/users
 router.get(

@@ -5,7 +5,7 @@ import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
 import { Modal, Badge, Spinner, EmptyState } from '../components/ui';
 
-const ROLES = ['lapangan', 'gudang', 'admin', 'management'];
+const ROLES = ['lapangan', 'gudang', 'admin', 'management', 'super_admin'];
 const empty = { email: '', password: '', nama_lengkap: '', role: 'lapangan' };
 
 export default function Users() {

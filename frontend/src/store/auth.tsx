@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { api, setTokens, clearTokens } from '../api/client';
 
-export type Role = 'lapangan' | 'gudang' | 'admin' | 'management';
+export type Role = 'lapangan' | 'gudang' | 'admin' | 'management' | 'super_admin';
 export interface User {
   id: string;
   email: string;

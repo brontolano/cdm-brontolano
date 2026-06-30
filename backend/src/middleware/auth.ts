@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { errors } from '../utils/http';
 
-export type Role = 'lapangan' | 'gudang' | 'admin' | 'management';
+export type Role = 'lapangan' | 'gudang' | 'admin' | 'management' | 'super_admin';
 
 export interface AuthUser {
   id: string;
@@ -38,6 +38,8 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
 export function rbac(...roles: Role[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.user) throw errors.unauthorized();
+    // super_admin selalu diizinkan ke semua aksi (CRUD penuh di semua modul)
+    if (req.user.role === 'super_admin') return next();
     if (roles.length && !roles.includes(req.user.role)) {
       throw errors.forbidden(`Role '${req.user.role}' tidak diizinkan untuk aksi ini`);
     }

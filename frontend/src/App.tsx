@@ -55,7 +55,7 @@ const APPS: { to: string; label: string; icon: LucideIcon }[] = [
 function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   if (!user) return null;
-  const visible = MENU.filter((m) => !m.roles || m.roles.includes(user.role));
+  const visible = MENU.filter((m) => user.role === 'super_admin' || !m.roles || m.roles.includes(user.role));
   const initials = (user.nama_lengkap || 'U').split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('');
   return (
     <div className="adm">
@@ -78,7 +78,7 @@ function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        {(user.role === 'admin' || user.role === 'management') && (
+        {(user.role === 'admin' || user.role === 'management' || user.role === 'super_admin') && (
           <div className="adm__apps">
             <div className="adm__apps-label">Aplikasi</div>
             {APPS.map((a) => {
